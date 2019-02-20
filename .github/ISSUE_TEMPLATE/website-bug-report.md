@@ -1,6 +1,10 @@
 ---
-title: 'Bug Report'
+name: Website Bug Report
+about: A bug encountered while using the website
+title: Bug Report
 labels: bug
+assignees: ''
+
 ---
 
 # Bug Report
