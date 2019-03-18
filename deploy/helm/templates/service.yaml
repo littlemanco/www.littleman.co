@@ -1,0 +1,32 @@
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  annotations:
+{{- if .Values.pod.annotations }}
+{{ toYaml .Values.service.annotations | indent 4 }}
+{{ end }}
+  labels:
+    app: {{ template "www-littleman-co.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "www-littleman-co.fullname" . }}
+spec:
+  selector:
+    app: {{ template "www-littleman-co.fullname" . }}
+    release: "{{ .Release.Name }}"
+  ports:
+    - protocol: "TCP"
+      name: "http"
+      port: 80
+  type: {{ default "ClusterIP" .Values.service.type }}
+  {{ if eq .Values.service.type "LoadBalancer" -}}
+  {{ if .Values.service.loadBalancer.publicIp -}}
+  loadBalancerIP: {{ .Values.service.loadBalancer.publicIp }}
+  {{ if .Values.service.loadBalancer.allowedIps -}}
+  loadBalancerSourceRanges:
+{{ .Values.service.loadBalancer.allowedIps | toYaml | indent 4 }}
+  {{ end -}}
+  {{ end -}}
+  {{ end -}}

@@ -1,0 +1,37 @@
+---
+apiVersion: "networking.istio.io/v1alpha3"
+kind: "Gateway"
+metadata:
+  labels:
+    app: {{ template "www-littleman-co.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "www-littleman-co.fullname" . }}
+spec:
+  selector:
+    # use Istio default gateway implementation
+    istio: "ingressgateway"
+  servers:
+  - port:
+      number: 80
+      name: {{ template "www-littleman-co.fullname" . }}-http
+      protocol: "HTTP"
+    hosts:
+    - "littleman.co"
+    - "www.littleman.co"
+    tls:
+      # sends 301 redirect for http requests
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: {{ template "www-littleman-co.fullname" . }}-https
+      protocol: "HTTPS"
+    tls:
+      mode: "SIMPLE"
+      serverCertificate: "/etc/istio/ingressgateway-certs/docs.crt"
+      privateKey: "/etc/istio/ingressgateway-certs/docs.key"
+    hosts:
+    - "littleman.co"
+    - "www.littleman.co"
+

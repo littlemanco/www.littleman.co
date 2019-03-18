@@ -1,0 +1,21 @@
+---
+pod:
+  annotations: {}
+  web:
+    image: gcr.io/littleman-co/wwww-littleman-co
+
+service:
+  type: "ClusterIP"
+  loadBalancer:
+    allowedIps:
+      - "0.0.0.0/0"
+  annotations: {}
+    
+deployment:
+  replicas: 1
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:

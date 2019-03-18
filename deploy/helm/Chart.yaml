@@ -1,0 +1,17 @@
+---
+name: "www.littleman.co"
+## The version should track the upstream version, followed by the iteration. This follows the pattern established by the
+## Debian package version.
+## See https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version
+version: "1.0.0-1"
+description: "The main website for the littleman.co service"
+keywords:
+  - "Documentation"
+  - "Website"
+home: "https://www.littleman.co"
+sources:
+  - "https://github.com/littlemanco/www.littleman.co"
+maintainers:
+  - name: "Andrew Howden"
+    email: "andrew.howden@littleman.co"
+engine: gotpl

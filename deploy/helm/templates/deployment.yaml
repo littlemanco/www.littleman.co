@@ -1,0 +1,54 @@
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  labels:
+    app: {{ template "www-littleman-co.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "www-littleman-co.fullname" . }}
+spec:
+  replicas: {{ default 2 .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "www-littleman-co.fullname" . }}
+      release: "{{ .Release.Name }}"
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: "RollingUpdate"
+  template:
+    metadata:
+      annotations:
+        co.littleman.release.time: {{ .Release.Time }}
+{{- if .Values.pod.annotations }}
+{{ toYaml .Values.pod.annotations | indent 8 }}
+{{ end }}
+      labels:
+        app: {{ template "www-littleman-co.fullname" . }}
+        release: "{{ .Release.Name }}"
+    spec:
+      containers:
+        - name: web
+          image: {{ .Values.pod.web.image | quote }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          ports:
+            - containerPort: 80
+              protocol: "TCP"
+              name: "http"
+          livenessProbe:
+            tcpSocket:
+              port: "http"
+              initialDelaySeconds: 0
+              timeoutSeconds: 1
+              failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: "http"
+              initialDelaySeconds: 0
+              timeoutSeconds: 1
+              failureThreshold: 3
+      restartPolicy: "Always"
