@@ -2,7 +2,7 @@
 pod:
   annotations: {}
   web:
-    image: gcr.io/littleman-co/wwww-littleman-co
+    image: gcr.io/littleman-co/www-littleman-co
 
 service:
   type: "ClusterIP"
