@@ -1,0 +1,425 @@
+---
+categories: ["Deep Dive"]
+date: 2019-03-18
+description: "A discussion about how to design a web software system to require as little change as possible over long periods of time"
+slug: "architecting-a-software-system-for-malleability"
+tags: ["architecture"]
+title: "Architecting a software system for malleability"
+---
+
+= Architecting a software system for malleability
+
+The past few years of software development has given me this one beautiful insight:
+
+> I can’t predict the future
+
+To illustrate this point on a personal level, it wasn’t even my plan to be a software developer. My undergraduate 
+studies were in sports physiology, and the intention was to follow that up with sports medicine. However, through the 
+various twists of fate inherent in life that was not to be, and I wound up helping building and shipping eCommerce 
+stores.
+
+The vagaries of life do not extend only to me, however. They’re an inherent part of life. The psychologist Dan Gilbert 
+says in his talk “The psychology of your future self”:
+
+> We asked people how much they expected to change over the next 10 years, and also how much they had changed over the 
+> last 10 years, and what we found, well, … people underestimate how much their personalities will change in the next 
+> decade.
+
+So, I didn’t know I would be here 6 years ago, and based on Gilberts assessment we don’t know who we’ll be in another 
+10 years. It follows that its extremely difficult to see where our technology should develop over the next 10 years. We
+can assess that by reviewing the last 10 years;
+
+- The Apple App Store, Chrome, Android and Bitcoin were released in 2008
+- Maps with GPS reached Android, in 2009
+- Both the iPad and car2go (short term, instant car rentals) were released in 2010
+- Google+ was launched and Adobe begun to sunset Flash in 2011
+- Windows 8, 4k TV, Windows phone, Curiosity on Mars, Google Glass, 802.11ac and Space X flying to the ISS were all in 
+  2012
+- Oculus Rift, the Smart Watch and Touch ID landed in 2013
+- Self driving cars began to emerge in 2014
+- Apple Pay, Project Loon and was released in 2015
+- IOT began to appear in earnest in 2016
+- Self driving trucks, reinforcement learning (AlphaGo) and the smart speaker made great strides in 2017
+- Cheap neural networks (Tensor Flow) executing on phones, bluetooth headphones that automatically translate and the 
+  GDPR were part of 2018
+
+Which brings us to our current year of 2019. Each of those technologies had an impact on the market, shifting the 
+balance of power in various industries dramatically and providing new opportunities for those who are lucky enough to 
+find the talent, capital and drive to take advantage of them.
+
+The lesson to draw from these changes is that the world changes at a far higher rate than one would naively imagine and
+when designing our software systems we should factor in this high rate of change so that we do not drive ourselves or 
+our project partners into financial ruin attempting to innovate around their next business offering
+
+== Platforms that have successfully adapted
+
+It stands to reason that if we were to assess how to design our own software to be maximally adaptable we should look 
+at what others have done in the past that have successfully adapted to industry changes.
+
+Apple, Cisco and Intel are all hardware (in addition to software) companies, so for our purpose we’ll dismiss them as a
+targets. Google, Microsoft, Facebook and Adobe are all primarily software companies however, so can serve as good 
+lessons how how to build systems that are well structured over time. Google and Facebook are famously “internet” heavy 
+companies, but both Adobe and Microsoft have pivoted in recent years to be much more internet driven. Microsoft have 
+famously stated Windows 10 will be their last version of Windows and Adobe is making significant moves into internet 
+driven business with “experience cloud”.
+
+So, these companies are moving towards software that is:
+
+- Delivered primarily via the internet
+- Developed and delivered to users in increments, and adapted based on user feedback
+- Sold via an “ongoing revenue” model, be that subscriptions or advertising
+
+The thing that these companies have in common is that their products are all designed around software that embraces 
+continual change, in any arbitrary direction.
+
+== Software design requirements
+
+To understand how to design software it’s first worth unpacking why we’re building software in the first place. 
+Generally speaking I build software to make a computer solve a problem in a reliable way to derive some sort of useful 
+work out of it. Programs can be as simple as:
+
+[source,bash]
+----
+# Get a list of unique commands run on this machine
+$ cat /var/log/auth.log | cut -d':' -f11 | sort | uniq
+----
+
+To Magento 1’s behemoth 1.7 million lines of code:
+
+[source,bash]
+----
+$ sloccount clean-magento-ee
+Total Physical Source Lines of Code (SLOC) = 1,730,997
+Development Effort Estimate 502.62 
+----
+
+Regardless, software programs exist for some human purpose; to take some human input and return some human output (at 
+some point or other).
+
+=== Designing for reasonability
+
+Softwares utility is a function of its predictability; of our understanding of how we can use it to accomplish work. 
+Perhaps the best example of this is the Unix utility called cat:
+
+[source,bash]
+----
+$ cat foo
+bar
+----
+
+This program takes the contents of the file “foo” and prints them to screen, showing “bar”. The particularly remarkable
+part about cat is not this behaviour, but rather:
+
+- That it was initially designed in 1971
+- That it hasn’t changed
+
+It is the very essence of a predictable program. There is a whole swathe of unix programs that follow this trend; 
+enunciated by Peter H. Salus with:
+
+> Write programs that do one thing and do it well.
+
+The wisdom of this minimalistic approach is difficult to overstate. Programs that are easily predictable and follow a 
+“standard” approach have some distinct advantages:
+
+- The time to understand and fit them in to our architecture is minimal
+- Their potential use cases are large
+- Their interoperability with other systems is large
+
+Additionally, keeping the feature set limited makes it much simpler to maintain this software, especially while 
+retaining knowledge of the use cases it is being used for — both those initially designed and those accrued over time.
+
+This dramatically reduces both the cost of maintaining one piece of software, and the likelihood that this particular 
+piece of software will change over time.
+
+=== Designing for interrogability
+
+Generally speaking we do not design software just for ourselves, but additionally to solve problems on behalf of others
+(usually for some monetary compensation). This creates a disconnect between:
+
+- How we understand the problem, and design the software to be used
+- How the software is actually used
+
+John Allspaw refers to this as “above/below the line”, in which each user, developer and other stakeholder has a 
+different conceptual model for how the software “works”. That model is only grounded in “reality” by interrogating the 
+software to ensure that it’s actually functioning as initially designed. To make design decisions as to how the software
+should be further reduced, restructured or replaced we need to know how the software is being use.
+
+We can start this process by interrogating cat. cat is written in c and runs on unix . Unix (particularly Linux in this 
+example) exposes a whole set of tools to allow inspecting both cat and other applications, such as strace , ltrace,
+perf with additional tools like sysdig . However, while these tools give us an extremely good idea what the application 
+is doing in specific invocations they are cost prohibitive to run the entire time. Instead, we need to move to less
+granular tools. Unfortunately, this comes with a tradeoff — we need to guess ahead of time what we need to instrument.
+
+There are a three broad way of doing so:
+
+- Logs
+- Metrics
+- Traces
+
+Without going too far into the detail, an application should be designed such that it exposes the detail required to 
+understand how its working. This is useful both for understanding when the application is not working correctly as well
+as understanding how its used under normal conditions.
+
+When choosing how to instrument an application the property that is perhaps the most useful is being able to ask 
+questions of the software — to interrogate it. Logs are perhaps the simplest way to do this, allowing us to check 
+internal program state at a later point when an issue is reported. But time series data is a very close second, and 
+allows querying for application behaviour over time. This allows making judgements about how people are using the app,
+rather than just snap-shotting application internal state over time. The Prometheus documentation explains how to 
+instrument an application to maximise its interrogability.
+
+By understanding how its used we can modify our program to make those use cases easier or more efficient. We can 
+additionally drop some of the functionality that is not being used over time to maintain program simplicity and reduce 
+the cost of maintenance and risk.
+
+As software is used more frequently it will be better understood by its users. That is also where software engineers 
+should invest the most time ensuring the software is designed in such a way it is easy for users to understand and 
+reason about as designing for simplicity will further increase uptake, forming a virtuous cycle until an “optimal 
+simplicity” level is reached.
+
+=== Design with a focus on solving the users problem
+
+The process of shipping software is a complex one, involving:
+
+- Business process modelling
+- UX Design
+- General architecture design
+- Software component design
+- Software infrastructure
+
+Each of these disciplines is a complex one that involves a staggering amount of research, discipline and effort over 
+time. Accordingly it’s more likely than not that each component will have specialists, each of whom seek to do the best
+job they possibly can.
+
+It’s important while designing and implementing this system that the goal is to solve a users problem. One can get lost
+in the minutiae of one's own discipline, creating a relative work of art — at the expense of the system as a whole,
+and the user with their problem.
+
+To solve the users problem each stakeholder needs to subjugate their own ideal solution in favour of a solution that 
+favours the customers happiness. To retain this focus while developing the design needs to put the customer at the 
+forefront of all decisions; each decision justified in relation to how that decision helps the customer solves their
+problem.
+
+By doing so, while each component of the system may be even more complex or less elegant for those who have built it,
+the vast majority of users will experience a simpler, easier to understand system.
+
+=== Designing unsurprising software
+
+Software that is “surprising” is software that is unpredictable. Unpredictable software is harder for users to make use 
+of, in turn driving usage of the application in unpredictable ways. This unpredictable usage means either either:
+
+- A high amount of refactoring to make the unusual mechanism the standard use case
+- A high amount of refactoring to shift users to the standard model
+
+Regardless, quite a bit needs to be changed. Accordingly the goal while developing software should be to be the 
+“least surprising” or “least astonishing”. This principle is captured as the “principle of least astonishment”:
+
+> “People are part of the system. The design should match the user’s experience, expectations, and mental models.”
+
+Unfortunately what users find surprising is context specific. While designing an alarm clock users might expect that 
+once they turn off an alarm the alarm goes away until the next occurrence, they might expect that hospital monitors 
+switch alarms back on themselves after a period of time. Accordingly, designing software that does “what the user 
+expects” requires an in depth understanding of that user, and the context in which they’re using the software.
+
+That is surprisingly hard to come by; the study of software development is such a complex one it precludes a depth first 
+knowledge of other fields. However, one can take two strategies to help design software in an unsurprising way:
+
+- Design software after an already established pattern. Design hospital software like other hospital software, and alarm
+  clocks like other alarm clocks.
+- Work closely with users, soliciting and integrating their feedback
+
+Even the most intractable problems can be made simpler and easier for users to understand with a deliberate design of
+software to match their conceptual models.
+
+=== Designing software on balance
+
+Given the above requirements perhaps the hardest thing to do is to strike a balance across them, and design the software
+for simplicity relative to each designer or consumer of that project.
+
+`cat`, for example, may be simple to me as a developer but it is likely not simple for my grandmother.
+
+Each stakeholder has a different model of the software:
+
+- Users model it in terms of the problems they’re trying to solve
+- The UX team model and optimize for users usage of the application
+- The business logic team attempt to model the user in the software
+- The business owners model it in terms of a return on investment
+
+This makes it hard for the software architect to be able to make the software simple relative to all users. However, 
+there are ways in which it’s possible to determine how to evolve the software to suit the stakeholders over time.
+
+As the software evolves and the stakeholders learn more about each other it will become clear that there are 
+commonalities in how those users see the software. For example, in the case of an eCommerce store the user, UX, business
+logic and business owners all have approximately the same notion of what an “order” or “shipment” needs, though with 
+varying degrees of detail.
+
+By writing the software to deliberately communicate its own nature with all stakeholders, writing supporting 
+documentation to clearly explain that software where the software is incapable of explaining itself and minimising the
+amount of “views” that the software has the software itself can remain simple, and all stakeholders have a similar
+mental model of the software.
+
+Once these patterns are established continue reusing them, reinforcing a consistent way of reasoning about that
+software.
+
+== Understanding what we’re designing
+
+To understand what we’re designing, we first need to think in terms of the problem we’re solving.
+
+=== Boxing
+
+In a past life I spent considerable time training to be a boxer (more specifically, a Thai boxer). Though it was only a
+habit, it was an activity that I fundamentally enjoyed. It additionally necessitated the purchase of some equipment. 
+To participate, I would need.
+
+- 1x. 16 ounce Boxing gloves
+- 2x. Mouth guards
+- 4x Singlets, Shorts & Wraps
+- 1x. Groin guard
+- 1x. Shin Guards (Heavy)
+- 1x. Shin guards (Light)
+
+The software journey we’ll consider then is the one that hopes to connect me with the equipment I need to continue 
+my boxing profession.
+
+=== Modelling the buying and usage journey
+
+In the above equipment there is little value for it to be particularly well styled, emphatic or otherwise different — 
+there is little fashion in the world of “boxing equipment”; they’re essentially commodity goods. Above all I would
+prize:
+
+1. Functional
+2. Comfortable
+3. Long lasting
+
+As a buyer of this equipment, I’m likely to undertake the following steps:
+
+- Discover the need for this equipment as I join (or rejoin) a boxing gymnasium
+- Discuss with my peers what a set of reliable equipment would be. If it’s available on site, I would likely simply
+  purchase it there.
+- Further research what equipment might be available, and look for reviews that help me determine what brand of 
+  equipment I would like
+- Make the purchase of this equipment, and use it for a period while training
+- Purchase either the same or new equipment once that had been worn beyond its utility.
+
+Each of those components have some reflection in software; from joining the boxing club to evaluating the equipment 
+after a period of use for reuse.
+
+== Designing the software itself
+
+Given our understanding of the principles required to design resilient software, let’s try and help our boxer find the
+equipment they need.
+
+=== Launch and Iterate
+
+As we’ve established, we’re poor predictors of the future. So to understand our problem we need to start solving it.
+
+The simplest way the users buying journey can be modelled is simply a cash transaction for equipment at the boxing
+gymnasium. This is a solution completely without software, but as a process is a reasonably elegant solution:
+
+- It’s simple, and reuses existing primitives (cash, equipment)
+- It’s extremely low cost and easy to implement
+
+This allows us to start filling out our business process. Things like “where do we purchase our goods from” or “where
+do we store our goods” or “what do users want to know about our goods” all start to come up and need solving.
+
+=== Resolving solved problems
+
+Given our scenario our boxing gym has been holding equipment but is struggling to understand what equipment sells well, 
+what sells badly and how much stock is remaining. In terms of our previously defined principles the process is not
+interrogable.
+
+In this the use cases are fairly common, and there are already solutions that have largely solved these problems.
+
+Dropping in a solution that solves “enough” of the problem is usually a good next step. Things like VendHQ, Square, Xero
+can solve the vast majority of these needs, and where they’re not yet solved a human process can make up the difference.
+
+These solutions are perhaps not the most technically elegant. However, they’re already shaped by user demand and are 
+thus the most conceptually simple to our user — they solve the users problem better than we’d be able to ourselves.
+
+Be careful about solutions that solve more than the problems that need to be solved now. It is harder to remove process
+than it is to add it, and unless there is a demand for a feature it is likely redundant. That increases complexity for
+no discernable gain.
+
+=== Building additional services
+
+Our boxing gymnasium is now successfully selling equipment to its members, however the gym has only limited staff and
+does not have the time to explain the tradeoff between the various pieces of equipment prior to the start of the class.
+
+To address this, they need software that will allow them to list their services on some sort of consumable format — the
+defacto implementation being on the internet.
+
+Depending on the software chosen previously it’s possible that our boxing gym can simply “switch on” an integration 
+with Shopify or Magento that allows them to reuse their existing data. If so, this is the best solution in this case. 
+The gymnasium can continue to use their existing services with limited additional learning required to list their 
+services online.
+
+However, if such an integration is not available it is worth beginning to reevaluate the entire business stack such 
+that a single solution can solve all problems. While this means a higher initial invest, it will be a significantly 
+lower invest in terms of learning, diagnostics and any further development over essentially any timescale.
+
+=== Designing a unique service
+
+Our boxing gym has now grown and sells equipment both in its gymnasium and online. However it would like to develop a
+new feature that doesn’t exist on the market — the ability to sell equipment directly from other gymnasiums.
+
+This requirement is so unique that no existing software can be used to model this particular requirement. Either 
+existing software will have to be repurposed, or new software designed.
+
+Whether to repurpose existing software or redesign new software essentially depends on the total feature set required 
+for the new software. If the business is well understood and the requirements limited designing new software offers 
+some compelling benefits:
+
+- The software can be designed to take advantage of business efficiencies
+- The software is well known by the implementing team
+- The software in absolute terms is not as complex
+
+However, comes at the significant risk of losing track of the implementing team. If that team disappears, a new team 
+will need to relearn the entirety of the business. Accordingly, if the software is being contracted out using a 
+“standard” solution with minimal customisation buys insurance against relations with that contractor going sideways.
+
+For the purpose of this we’ll assume that the development team is in house and has a vested interested in the success 
+of the project.
+
+Perhaps the best thing to do is to rebuild the business logic entirely. This means losing many features that are 
+inherent in commercial or open source software, but it also dramatically reduces the absolute complexity of the system.
+This allows much faster development targeted directly for the needs of the business.
+
+The result is software that is simpler, more targeted and in better control of the business — presuming the development 
+team is capable of such software design.
+
+== Downsides of malleable software
+
+Malleable software is exceedingly hard to design. There are some significant downsides to it:
+
+=== Expensive
+
+As described in the example of the boxing gym owner, it was not economical to design software from scratch until the
+business requirement was such that no software existed that could be easily ported to the businesses need.
+
+Designing software from scratch is an extremely expensive exercise. Developers are a scarce resource and developers that
+are driven by the results of the business even rarer.
+
+It’s often a better balance to reuse existing primitives for services rather than take the leap for fully customized,
+malleable software. The more customized software is, the more expensive it is to maintain.
+
+=== Difficult
+
+The process of understanding, designing and implementing software is an exceedingly difficult task. It requires an in 
+depth knowledge of the problem, patience to put forward designs and rework them and the ability to implement the designs
+in software.
+
+=== Long Term
+
+Software that is malleable does pay off, but only over a long period of time. The upfront investment is significant,
+and is better offset by incrementalism and the shifting to a self hosted solution only as there are no other options
+available.
+
+However, once the initial design of the solution has been completed and presuming upkeep is not cost prohibitive, a
+solution that is more malleable will open more business opportunity.
+
+== In Conclusion
+
+Designing software is a complex process, needing to balance the needs of all stakeholders while keeping true to the 
+vision that it intends to solve over a long period of time and with many different hands.
+
+However, hopefully this article has provided some general background as to how software can be designed in such a way 
+that it is more malleable, reducing the costs over the long term.
