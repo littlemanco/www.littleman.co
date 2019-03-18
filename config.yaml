@@ -23,21 +23,26 @@ menu:
   - name: Home
     url: /
     weight: 1
-  - name: Blog
-    url: /blog/
+  - name: Articles
+    url: /articles/
     weight: 2
-  - name: Docs
-    url: /docs/
+  - name: "Documentation"
+    url: "/documentation"
     weight: 3
-  - name: Get Started
-    url: /get-started/
-    weight: 4
 
 params:
   includeBootstrapJs: false
   showActiveNav: true
   containerMaxWidth: 700px
   dateFormat: Jan 2, 2006
-  homeText: Simple, Beautiful web development.
+  homeText: |
+    **Simple, Beautiful web development.**
+
+    The best way to get started working with us at here at littleman.co is to email the support mail:
+
+    [support@littleman.co](support@littleman.co?subject=Request%20for%20further%20information)
+
+    From there we can discuss whether we can help. Try and be as detailed as you can; to preserve our concentration and try
+    and be as efficient as possible we generally only check email 1x per 24 hour period.
   footerText: ⓒ Andrew Howden, 2019
   hideFooter: false
