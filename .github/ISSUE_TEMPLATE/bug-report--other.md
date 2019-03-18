@@ -1,12 +1,10 @@
 ---
 name: Bug Report [Other]
 about: Unexpected behaviour encounted
-title: Bug Report [Other]
+title: The application fails to __NORMAL_BEHAVIOUR__
 labels: bug
 assignees: ''
 ---
-
-# Steps to reproduce
 
 1.
 2. ...

@@ -1,12 +1,11 @@
 ---
 name: Bug Report [Website]
 about: Unexpected behaviour encountered while using the website
-title: Bug Report [Website]
+title: The website fails to __NORMAL_BEHAVIOUR__
 labels: bug
 assignees: ''
 ---
 
-# Bug Report
 <!--
 
   Hey! Let's get this bug squashed.

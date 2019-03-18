@@ -7,7 +7,22 @@ exemptLabels:
   - security
 staleLabel: wontfix
 markComment: >
-  This issue has been automatically marked as stale because it has not had
-  recent activity. It will be closed if no further activity occurs. Thank you
-  for your contributions.
+  This issue has not received any updates in quite some time. It's not clear whether it's still relevant, and should be
+  kept.
+
+  If there is no more activity in the next 14 days on this ticket, I will close it. It can always be reopened later, but
+  for now in the interests of keeping the project as clear and simple as possible it will be closed.
+
+  If you'd like to keep it open simply comment:
+
+    "This needs to remain open"
+
+  And I will leave it alone for the next 90 days or so.
+
+  Alternatively, if you are already sure that this is no longer relevant you can also close it directly.
+
+  For more information see:
+
+    https://docs.littleman.co/Project%20Management/latest/bots/stale.html
+
 closeComment: false

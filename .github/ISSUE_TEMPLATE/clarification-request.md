@@ -1,11 +1,11 @@
 ---
 name: Clarification Request
 about: A request for additional information
-title: Clarification Request
+title: As a user I'd like to know more about __REQUEST_FOR_INFO__
 labels: documentation
 assignees: ''
 ---
-# Clarification Request
+
 <!--
 
   There are times where the answer for something simply isn't written down somewhere before, or that what's written
