@@ -7,6 +7,9 @@
   {{ if .IsHome }}
     {{ $title = .Site.Title }}
   {{ end }}
+
+  {{ template "_internal/opengraph.html" . }}
+  
   <title>{{ $title }}</title>
   {{ partial "style.html" . }}
 </head>

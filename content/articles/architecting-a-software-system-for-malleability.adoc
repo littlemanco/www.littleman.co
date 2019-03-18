@@ -5,6 +5,8 @@ description: "A discussion about how to design a web software system to require 
 slug: "architecting-a-software-system-for-malleability"
 tags: ["architecture"]
 title: "Architecting a software system for malleability"
+images:
+  - "/images/headers/architecting-a-software-system-for-malleability.png"
 ---
 
 = Architecting a software system for malleability
