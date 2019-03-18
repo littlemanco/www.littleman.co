@@ -3,7 +3,7 @@ kind: "pipeline"
 name: "web"
 steps:
   - name: "hugo"
-    image: "quay.io/littlemanco/hugo:latest"
+    image: "quay.io/littlemanco/hugo:1.0.0"
 
 trigger:
   branch:
@@ -16,7 +16,7 @@ name: "deploy"
 
 steps:
   - name: "hugo"
-    image: "quay.io/littlemanco/hugo:latest"
+    image: "quay.io/littlemanco/hugo:1.0.0"
   - name: "container"
     image: "plugins/gcr"
     settings:
