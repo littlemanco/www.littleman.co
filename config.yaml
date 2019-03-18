@@ -21,17 +21,17 @@ permalinks:
 menu:
   nav:
   - name: Home
-    pre: home
     url: /
     weight: 1
-  - name: Docs
-    pre: book-open
-    url: /docs/
+  - name: Blog
+    url: /blog/
     weight: 2
-  - name: Get Started
-    pre: play
-    url: /get-started/
+  - name: Docs
+    url: /docs/
     weight: 3
+  - name: Get Started
+    url: /get-started/
+    weight: 4
 
 params:
   includeBootstrapJs: false
