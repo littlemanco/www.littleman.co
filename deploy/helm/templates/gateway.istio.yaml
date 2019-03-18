@@ -29,8 +29,8 @@ spec:
       protocol: "HTTPS"
     tls:
       mode: "SIMPLE"
-      serverCertificate: "/etc/istio/ingressgateway-certs/docs.crt"
-      privateKey: "/etc/istio/ingressgateway-certs/docs.key"
+      serverCertificate: "/etc/istio/ingressgateway-certs/www.crt"
+      privateKey: "/etc/istio/ingressgateway-certs/www.key"
     hosts:
     - "littleman.co"
     - "www.littleman.co"
