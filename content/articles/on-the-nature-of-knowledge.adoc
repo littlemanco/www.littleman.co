@@ -1,0 +1,140 @@
+---
+categories: ["Philosophy"]
+date: 2019-03-20
+description: "Thinking about the nature of knowledge, and how I think about growing it further"
+slug: "on-the-nature-of-knowledge"
+tags: ["meta"]
+title: "On the nature of knowledge"
+authors:
+  - "Andrew Howden"
+---
+
+I have been extraordinarily lucky in my software development career. Given a limited set of experience and idle
+curiosity about computers I was able to meet a number of people who guided me to developing my development skillset
+until it is the reasonably broad, experienced skill it is today.
+
+As I've grown as a developer I've been able to meet other extraordinary developers; those who when I was early in my
+career seemed god-like in the ability to produce software, understand or diagnose some issue or be able to forsee some
+industry pattern. Even outside of the software development vertical I've been able to meet those who've made
+multi-million dollar fortunes, captains of their respective industry and those who direct and manage the building of
+monumental, towering structures. As I've met each of these people one thing has struck me each time:
+
+> These industrial giants are simply people
+
+This, and the subsequent conclusion there are few or none who are inherently more talented or capable than we is both
+disheartening and tremendously exciting. This was expressed eloquently by the founder of Apple:
+
+[quote, Steve Jobs]
+____
+“When you grow up you tend to get told that the world is the way it is and your life is just to live your life inside
+the world. Try not to bash into the walls too much. Try to have a nice family life, have fun, save a little money. 
+That's a very limited life. Life can be much broader once you discover one simple fact: Everything around you that 
+you call life was made up by people that were no smarter than you. And you can change it, you can influence it… Once 
+you learn that, you'll never be the same again.”
+____
+
+This notion that there are some among us who are individually (or by virtue of a corporation collectively) superior is
+a pleasant notion, but in my experience fictitious. However, this is dishearteningly cruel to those who are growing
+either through their new entry into an industry, or simply growing as people. Those who reflect on their own
+capabilities against the capabilities of these giants, find themselves wanton and conclude rather than that they're also
+capable of such learnings rather conclude their somehow deficient in some way. To those people I would wish to pass
+the message:
+
+> This is patently false.
+
+To understand what separates those people from our younger selves we should start unpacking what it is to be
+knowledgeable about a topic.
+
+== On Knowledge
+
+Wikipedia defines knowledge as follows:
+
+> Knowledge is a familiarity, awareness, or understanding of someone or something, such as facts, information, 
+> descriptions, or skills, which is acquired through experience or education by perceiving, discovering, or learning.
+
+That's an extraordinarily broad definition, so we'll refine it a little further:
+
+> Knowledge is the ability to make a "thing" do useful "work"
+
+Given this, the sum total of our knowledge is the amount of "things" we're able to make do useful "work". The more
+knowledgeable we are, the more things we can use to do more work.
+
+To make this more concrete, we'll use the example of a wooden staff -- essentially, a long straight stick.
+
+=== A useful stick
+
+If we were to enumerate a naive set of ways we could use a stick we might come up with:
+
+1. Poke something
+2. Hit something
+
+Not an enlightened list to be sure, but it serves as a base line of utility for the stick and is more utility than
+many of our animal cousins have derived from it.
+
+=== The tree of knowledge
+
+In this scenario, the acquisition of more knowledge would be finding new and interesting ways to use our stick. 
+For example:
+
+- We might figure out that if we leverage our stick against a rock we can multiply the force we're able to output
+  many times more force than we're otherwise able to exert on the stick, multiplying our sticky power
+- We might collect a series of sticks and stack them together vertically, such that we have a fence between us and
+  the outside world
+- We might combine the stick with some leather or skin wrapped tightly such that we can create a structure on which
+  we can lay leaves or more skin, forming a shelter
+
+The uses for a stick are essentially infinite, however not all of them are apparent from the first glance of the stick.
+Over time we must reason further about the stick, trying it in new circumstances to derive additional knowledge.
+
+We can further start to make judgements about the many sticks that we might come across. For example:
+
+- Sticks from a given tree make better shelters
+- When sticks are burned they harden, and make much better levers and building material
+- Some sticks burn better than others, giving more heat at the cost of more stick
+
+Over time we broaden our knowledge of sticks until the stick is a tremendously useful object indeed.
+
+== Acquiring knowledge
+
+In my experience the acquisition of knowledge is driven almost entirely by a combination of curiosity and necessity,
+rather than by a rote repetition. This is unfortunate as much of my scholastic career was focussed almost entirely on
+the completion of a set of repetitious tasks, rather than a critical analysis or learning of some kind. A poor
+preparation for a world in which our metaphoric sticks are being used in ways that are very different indeed than what 
+I was taught as a youth.
+
+However, to dismiss the education system is to do a disservice to oneself and to the broader community maintaining it.
+Passing on knowledge is a difficult task indeed and our education system does the best it knows how to do so. Given this
+it is our duty to dip in to and try and derive value from traditional forms of education as well as from some of the
+newer ways of expressing knowledge -- YouTube, Twitter or whatever else.
+
+> We need to maximise our own opportunities in the face of a flawed system
+
+In my experience if we do this, better systems appear shortly thereafter.
+
+== Absolute limits of knowledge
+
+That which is the best in the world is generally not the work of a single visionary, but rather of a team well
+motivated to contribute their own specialisations to a common goal. The iPhone was not the work of Mr. Jobs but rather
+of teams of engineers, designers, manufacturers, logistics and administrative staff.
+
+The lesson to derive of this is that there are fundamental limits on our ability to learn all of the things that need
+to be done to create great products, services or anything else. Even if we could there is a cap in how much time we can
+work until we reach exhaustion.
+
+Our knowledge is secondary to the respect we need to pay our colleagues, and it is our responsibility to cultivate the
+humility necessary to defer to our colleagues in their areas of expertise.
+
+== In Conclusion
+
+There are those among us who seem truly different; inspirational figures who we intuitively feel are somehow apart from
+us and able to do things that we cannot. It is uncomfortable to realise those who we venerate are still human, however
+it is exciting to know that we can ourselves be as great or greater than our idols. The acquisition of knowledge is
+a process that is fairly simple but requires continually exposing ourselves to new information; new ways of viewing a
+problem and the solutions thereof. Additionally, no matter the knowledge we acquire we will never be able to create the
+truly great products and services we'd like ourselves. Rather, it is in conjunction with our colleagues that we'll be
+able to be successful. 
+
+This is a lesson that I wish I had learned at a younger age, but perhaps this post will find someone at a time they
+are able to hear it, and save them the years I spent learning it the hard way.
+
+Always be learning.
