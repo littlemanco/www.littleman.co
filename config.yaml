@@ -2,7 +2,7 @@ baseURL: https://www.littleman.co
 languageCode: en-us
 title: littleman.co
 theme: littleman-co
-googleAnalytics:
+googleAnalytics: "UA-53227254-4"
 publishDir: "web"
 
 pygmentsCodefences: true
@@ -11,7 +11,9 @@ pygmentsCodefencesGuessSyntax: true
 pygmentsStyle: pygments
 
 taxonomies:
-  tag: tags
+  author: "authors"
+  tag: "tags"
+  category: "categories"
 
 permalinks:
   post: /:filename/
