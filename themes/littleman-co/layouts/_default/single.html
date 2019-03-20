@@ -1,6 +1,13 @@
 {{ define "main" }}
 
 <h1>{{ .Title }}</h1>
+<div class="content">
 {{ .Content }}
+</div>
+{{ if .IsPage }}
+<small>Found a bug? Got a correction? You can 
+    <a href="https://github.com/littlemanco/www.littleman.co/edit/master/content/{{ .File.Path }}"
+       target="_blank">edit this page on GitHub</a></small>
+{{ end }}
 
 {{ end }}

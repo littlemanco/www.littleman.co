@@ -8,7 +8,8 @@ body {
 
 
 /* Topnav */
-#nav-border {
+#nav-border,
+.content {
     border-bottom: 1px solid #397eb2;
 }
 
