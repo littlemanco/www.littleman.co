@@ -3,13 +3,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   {{ .Hugo.Generator }}
   <link rel="stylesheet" href="{{ "css/bootstrap.min.css" | absURL }}">
+  <link rel="stylesheet" href="{{ "css/styles.css" | absURL }}">
+
   {{ $title := print .Title " | " .Site.Title }}
   {{ if .IsHome }}
     {{ $title = .Site.Title }}
   {{ end }}
 
   {{ template "_internal/opengraph.html" . }}
-  
+
   <title>{{ $title }}</title>
   {{ partial "style.html" . }}
 </head>
