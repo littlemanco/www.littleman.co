@@ -188,7 +188,7 @@ The process of shipping software is a complex one, involving:
 - Software component design
 - Software infrastructure
 
-Each of these disciplines is a complex one that involves a staggering amount of research, discipline and effort over 
+Each of these disciplines is a complex one that involves a staggering amount of research, discipline, and effort over 
 time. Accordingly it’s more likely than not that each component will have specialists, each of whom seek to do the best
 job they possibly can.
 
