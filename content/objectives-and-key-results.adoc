@@ -1,0 +1,38 @@
+---
+categories: ["Direction"]
+date: 2019-03-18
+description: "Objectives and Key Results"
+slug: objectives-and-key-results"
+tags: ["okr", "objectives"]
+title: "Objectives and Key Results (2019)"
+---
+
+Objectives and Key Results (or OKRs) are a mechanism for setting the goals for a team. The general notion is that there
+is:
+
+[cols="2,8"]
+|===
+h| An objective | A clearly defined goal 
+h| Key Results  | A measurement designed to track the achievement of that goal
+|===
+
+The vision of littleman.co is:
+
+> Simple, beautiful software development.
+
+Each of the objectives defined by the organisation should be clearly derived from this vision. Meeting these goals
+should demonstrably simplify and make more beautiful software that is deployed both in conjunction with littleman.co,
+and with the broader community.
+
+== Objectives
+
+=== Make software development easier to understand
+
+For something to be simple, it must be a concept that is easily understandable by those who wish to make use of it. One
+way of decreasing the apparent complexity of a concept is to provide similar models, or ways to think about it that make
+it more predictable. While this doesn't reduce the absolute complexity of that model, it can reduce it's perceived
+complexity.
+
+To this end, this objective is expected to yield the following key results:
+
+1. Have 50,000 users / month read the publications written on littleman.co, or any of its syndicated copies.
