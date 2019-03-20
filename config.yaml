@@ -26,7 +26,7 @@ menu:
   - name: Articles
     url: /articles/
     weight: 2
-  - name: "Documentation"
+  - name: "Docs"
     url: "/documentation"
     weight: 3
 
