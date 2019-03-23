@@ -1,0 +1,19 @@
+{{ define "main" }}
+
+<h1>{{ .Title }}</h1>
+
+<div class="callout callout--tip">Looking to learn more about a particular topic? We'd love to help! You can
+  <a href="https://github.com/littlemanco/www.littleman.co/issues/new?assignees=&labels=documentation&template=clarification-request.md&title=As+a+user+I%27d+like+to+know+more+about+__REQUEST_FOR_INFO__"
+     target="_blank"
+     rel="noopener">request an article via GitHub</a>.
+</div>
+
+{{ range .Pages.ByPublishDate.Reverse }}
+<p>
+  <a class="font-125" href="{{ .Permalink }}">{{ .Title }}</a>
+  <br>
+  {{ partial "date-and-tags.html" . }}
+</p>
+{{ end }}
+
+{{ end }}

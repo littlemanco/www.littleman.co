@@ -6,6 +6,10 @@ body {
     font-family: Georgia,Cambria,"Times New Roman",Times,serif;
 }
 
+h1,
+a {
+    color: #397eb2;
+}
 
 /* Topnav */
 #nav-border,
@@ -27,11 +31,6 @@ blockquote {
     font-style: italic;
     
     border-left: solid 10px #397eb2;
-}
-
-h1,
-a {
-    color: #397eb2;
 }
 
 .videoblock {
@@ -56,4 +55,59 @@ a {
     width: 100%;
     height: 100%;
     border: 0;
+}
+
+/* Callouts */
+
+.callout {
+    position: relative;
+    margin-bottom: 1em;
+    padding: 6px 12px;
+    border: solid 1px #92A4B2;
+    border-left: solid 48px;
+    background: #eef1f3;
+    
+}
+
+.callout::before {
+    content: 'wb_sunny';
+    color: #eef1f3;
+    position: absolute;
+    display: block;
+    text-align: center;
+
+    left: -40px;
+
+    /* Material Icons */
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 32px;  /* Preferred icon size */
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+  
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+  
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+  
+    /* Support for IE. */
+    font-feature-settings: 'liga';
+}
+
+.callout--tip {
+    border-color: #5DB25E;
+    background-color: #e0f9e1;
+}
+
+.callout--tip::before {
+    content: 'lightbulb_outline';
 }
