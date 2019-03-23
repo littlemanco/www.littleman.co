@@ -1,0 +1,16 @@
+{{ define "main" }}
+
+<h1>{{ .Title }}</h1>
+{{ partial "date-and-tags.html" . }}
+<br><br>
+<div class="article">
+{{ .Content }}
+</div>
+{{ if .IsPage }}
+<small>Found a bug? Got a correction? You can 
+    <a href="https://github.com/littlemanco/www.littleman.co/edit/master/content/{{ .File.Path }}"
+       target="_blank">edit this page on GitHub</a></small>
+{{ end }}
+</div>
+
+{{ end }}
