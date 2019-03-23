@@ -1,0 +1,28 @@
+---
+categories: ["Documentation"]
+date: 2019-03-23
+description: "How much littleman.co charges"
+slug: "pricing"
+tags: ["pricing", "costs", "publications"]
+title: "Pricing"
+---
+
+Work is billed in a 15 minute period called an "increment". As the team works they will track their time in blocks of
+15 minutes, rounded up to the next 15 minute block.
+
+Increments are billed at:
+
+- 25 USD
+
+Everything associated with a project is billed. This includes:
+
+- Emails
+- Meetings
+- Discussions
+- Development
+- Documentation
+
+Or anything else associated with working on the project.
+
+Prices are subject to change, but will be honoured for the agreed upon period. By default, work is scheduled in
+monthly blocks.
