@@ -13,8 +13,7 @@
         {{ $active = "nav-link-active" }}
       {{ end }}  
     {{ end }}  
-    {{ $icon := printf "<i data-feather=\"%s\"></i>" .Pre }}
-    {{ $text := print $icon " " .Name | safeHTML }}
+    {{ $text := print .Name | safeHTML }}
     <a class="nav-link {{ $active }}" href="{{ .URL }}">{{ $text }}</a>
   {{ end }}
   </nav>

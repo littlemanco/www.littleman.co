@@ -18,8 +18,6 @@ taxonomies:
 permalinks:
   post: /:filename/
 
-# See https://feathericons.com/
-# The value of pre is the icon name
 menu:
   nav:
   - name: Home
