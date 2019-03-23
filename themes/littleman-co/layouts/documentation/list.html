@@ -1,0 +1,19 @@
+{{ define "main" }}
+
+<h1>{{ .Title }}</h1>
+
+<div class="callout callout--tip">Looking for something specific? You 
+  can <a href="https://www.google.com/search?q=site:www.littleman.co">Google it.</a> Use <code>site:www.littleman.co</code>
+  in the query to restrict results to this website.
+
+  Checkout <a href="https://support.google.com/websearch/answer/2466433" target="_blank" rel="noopener">Google's
+  documentation for further details.</a>
+</div>
+
+{{ range .Pages.ByLinkTitle }}
+<ul>
+  <li><a href="{{ .Permalink }}">{{ .Title }}</a></li>
+</ul>
+{{ end }}
+
+{{ end }}
