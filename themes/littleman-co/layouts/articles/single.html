@@ -1,5 +1,12 @@
 {{ define "main" }}
 
+<!-- Syntax Highlighting -->
+<link rel="stylesheet" href="{{ "css/highlightjs/default.css" | absURL }}">
+<link rel="stylesheet" href="{{ "css/highlightjs/a11y-dark.css" | absURL }}">
+
+<script src="{{ "js/highlight.pack.js" | absURL }}"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
 <h1>{{ .Title }}</h1>
 {{ partial "date-and-tags.html" . }}
 <br><br>
