@@ -2,7 +2,7 @@
 categories: ["Documentation"]
 date: 2019-03-24
 description: "How projects are structured and governed"
-slug: "about"
+slug: "project-management"
 tags: ["project management", "documentation", "publications"]
 title: "Project Management"
 ---
