@@ -1,0 +1,14 @@
+---
+categories: ["Documentation"]
+date: 2019-03-24
+description: "About littleman.co"
+slug: "about"
+tags: ["media", "documentation", "publications"]
+title: "About"
+---
+
+littleman.co is simply a corporate front for me (Andrew Howden) to push professional consultation through.
+
+I like to try and be as helpful as possible but short of answering limited questions via Twitter (@andrewhowdencom) or 
+other as-needed services we need to come to a paid arrangement to ensure that I can continue to help you and others 
+like you while maintaining a reasonable lifestyle for myself.
