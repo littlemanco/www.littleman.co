@@ -1,0 +1,54 @@
+---
+categories: ["Documentation"]
+date: 2019-03-24
+description: "How projects are structured and governed"
+slug: "about"
+tags: ["project management", "documentation", "publications"]
+title: "Project Management"
+---
+
+= Project Management
+
+Project management is the process of taking abstract requirements such as "Redesign the checkout" and turning them 
+into specific work items that can be built by the development team.
+
+Broadly speaking, the process is as follows:
+
+1. Create an issue in the GitHub issues list
+2. Clarify any ambiguities about the issue
+3. Add the issue to the project "todo" list
+4. Develop and release the issue
+5. Repeat
+
+== Automated Management
+
+As much as possible issue management is automated. Issues should be automatically updated to reflect works progress
+as a by product of doing that work; for example:
+
+- Issues should be automatically closed after that work is deployed
+- Issues should be automatically added to the project board when created
+- Issues that are old and haven't been touched in a while will be closed as "stale", and need to be explicitly 
+  reopened.
+
+There are various "bots" that help with these tasks. These bots are essentially little computer programs that are
+designed to communicate different states of the project to users, and allow them to respond in a human friendly way.
+
+The best example is the stale bot, which will attempt to close issues if they've received no update for a period of
+time.
+
+=== Stale Bot
+
+In our experience there is always more work that should be done than the developers will get time to do. This usually 
+means that the number of issues to be completed grows infinitely until navigating the issues becomes a hazard, and 
+there is no hope of ever completing all of the work.
+
+However, what is important now tends not to be important over a longer period of time. Accordingly, while issues might
+have been created earlier with good intentions, it’s possible that they’re no longer relevant.
+
+The "stale bot" is an attempt to ensure that if work is important it will continue to "bubble up" to the top of the 
+work queue, and work that is not important can fade away.
+
+It will comment on issues that have had no activity after a certain period of time, prompting the project owner to 
+indicate whether that work is still relevant.
+
+If it is no longer relevant or there is no comment on the issue, it will be closed
