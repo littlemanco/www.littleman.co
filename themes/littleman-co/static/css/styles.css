@@ -12,19 +12,14 @@ a {
 }
 
 h1 {
-    font-size: 3.75em;
-    letter-spacing: -.0125em;
-}
-
-h2 {
     font-size: 3em;
 }
 
-h3 {
+h2 {
     font-size: 2.125em;
 }
 
-h4 {
+h3 {
     font-size: 1.5em;
 }
 
