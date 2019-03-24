@@ -1,0 +1,88 @@
+---
+categories: ["Documentation"]
+date: 2019-03-24
+description: "How code is managed from development through to production"
+slug: "version-control"
+tags: ["version-control", "documentation", "publications"]
+title: "Version Control"
+---
+
+= Version Control
+
+Version control is a broad class of tools designed to make it easy to navigate through the history of a given project.
+In all cases littleman.co uses the "git" version control software.
+
+== Workflow
+
+The workflow for git used by littleman.co prioritizes getting code checked in to the main line and deployed to customers
+as quickly as possible.
+
+Accordingly it's expected there are only two work streams:
+
+.Work streams
+|===
+| Stream    | Usage
+
+| Master    | The canonical copy of the software; that which runs in production
+| Other     | Any other work; a single step away from the master branch.
+|===
+
+This means that the git workflow is expected to look like:
+
+[source,bash]
+....
+
+O----O----O----O----O----O----O-----O # Master Branch
+      \                 /
+       O----O----O-----O              # Bug Fix / Feature Branch
+....
+
+
+== Conventions
+
+=== Branches
+
+There are no specific conventions for branch names beyond being descriptive with the branch name.
+
+=== Commits
+
+Commits should contain as much information as would be useful to future developers when attempting to understand the
+code **without access to the issue management system**.
+
+Beyond that, commits should:
+
+==== Break at 72 characters
+
+Rather than the long form:
+
+....
+This commit does a thing which changes the other thing, and in turn affects the third thing. This allows it to ...
+....
+
+Commits should break both in the title and body at 72 characters:
+
+....
+This commit does a thing which changes the other thing, and in turn
+affects the third thing. This allows it to ...
+....
+
+This format makes it easier to read in a terminal interface, and is widely supported among git tooling.
+
+==== Reference issue tracking
+
+Where a commit has been made and is expected to resolve an issue, a note in the git body should reflect this.
+
+For example,
+
+....
+Resolves #16
+....
+
+GitHub will then pick this up and reference the commit from the issue, closing the issue once the commit is deployed.
+
+This simplifies issue management.
+
+== Further Reading
+
+- https://git-scm.com/[The Git home page]
+- https://medium.com/@andrewhowdencom/anatomy-of-a-good-commit-message-acd9c4490437[Anatomy of a "Good" commit message]
