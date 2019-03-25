@@ -1,0 +1,328 @@
+---
+categories: ["Technical Analysis"]
+date: 2019-03-25
+description: "How littleman.co organises projects as well as why they do it in that way"
+slug: "laying-out-a-git-repository"
+tags: ["git", "layout"]
+title: "Laying out a git repository"
+github-issue: 11  
+authors:
+  - "Andrew Howden"
+---
+
+= Laying out a git repository
+:bibtex-file: content/bibliography.bib
+:bibtex-style: ieee
+
+Version control is one of the more fundamental pieces of software development. It allows is to go back and forward
+through the projects history and understand who implemented each change and (hopefully) why they implemented that change
+in that design. It is an invaluable tool for use while understanding any given issue.
+
+Canonically littleman.co uses `git` as its version control tool of choice. `git` is essentially the defacto standard of
+the software industry, having replaced Mercurial, Subversion and CVS. The majority of our development tooling and
+workflow is built on top of its primitives, including "patches", "branches", "tags" and so fourth. However `git`, for
+all of its opinions is remarkably silent about how to lay out a project.
+
+This is a good thing for the tool but not necessarily for the developer. When reviewing a project for the purpose of
+understanding and debugging it the developer is looking to build a conceptual model of the project as quickly as
+possible, then spotting things that violate that conceptual model. When building these models consistency is prised
+above nearly all other properties as it reduces the amount of work a developer needs to do to make predictions about
+that project.
+
+Accordingly it is a reasonable investment to ensure that all projects are laid out on disk consistently and that
+developers can easily understand and search through them for the things they require.
+
+== Existing Standards
+
+Defining a standard for how a project should be laid out is hardly a new endeavour. There is:
+
+- The http://refspecs.linuxfoundation.org/FHS_3.0/fhs-3.0.html[Linux Filesystem Hierarchy Standard]
+- The https://github.com/golang-standards/project-layout[standard go project layout]
+- The https://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html[Maven standard directory layout]
+- The https://docs.python-guide.org/writing/structure/[Python standard project layout]
+
+If one of these standards is in wide use in your organisation its best to continue with that, rather than
+https://xkcd.com/927/[adopt yet another standard]. However each of those standards have the limitation they're only
+used in the context of the language or build tooling they're defined in. In an environment such as littleman.co that
+includes many different languages, applications and other types of development these standards either do not define
+enough behaviour to be useful or define things that do not propagate well between langauges.
+
+== Determining the boundaries of a repository
+
+There are usually many different components of a project that need to come together to have that project user facing and
+doing useful work. Things like the:
+
+- Application
+- Infrastructure
+- CI/CD
+- Artifacts
+- Documentation
+
+These things must all be coordinated in some way that allows developers to make changes to a project in a predictable
+way and with predictable timing and have those changes be pushed to users.
+
+Traditionally each of these components would be kept separate, handled by different teams. However with the advent
+of continuous delivery developers can push code to production in a "self service" manner, and have a robot take care
+of tasks such as:
+
+- Ensuring the application works as expected before it hits users
+- Replacing the existing application in production with the new application
+- Rolling back the application to its previous version in the case of failure
+- Creating testing environments
+
+And so fourth.
+
+Deployments are the boundary that seems most useful to determine what should be in a single repository. For example,
+if the application is the only thing that should change in a single deployment it can be the only thing in that
+repository. However, if the application is changing and requires an underlying infrastructure change, that
+infrastructure should also be in the repository. If the application requires a new set of tests and those tests should
+be in the CI/CD configuration that also belongs in the repository.
+
+However, this also provides good boundaries as to what does not belong in the repository. The application should never
+require Kubernetes to be in a specific configuration, and Kubernetes configuration and life cycle should thus be managed
+in a separate repository. If the application requires new TLS certificates but those certificates are handled in a
+process outside the normal application development process they should also not be stored in the repository.
+
+By using the deployment as our boundary to determine what goes in and out of the project we see a number of benefits:
+
+=== Democratised project tooling
+
+Even though things such as Docker or CI/CD may require specialised knowledge that the application developers do not
+have any reason to learn, by seeing those changes in the same place and subject to the same standards as other parts
+of the application those developers get a better understanding of their own project lifecycle. They can use that
+knowledge to decrease the time required to understand and resolve issues that are associated with any changes in that
+process, such as configuration changes in CI/CD breaking asset compilation in the application.
+
+Additionally those developers can contribute application specific insights to the CI/CD process, such as the best place
+to store configuration or environment specific application configuration that must be applied.
+
+=== Single view of changes
+
+When understanding how and when a bug was introduced into a service the fewer places we must look and correlate the
+change the faster we can find and resolve the issue.
+
+By having all changes associated with the project down to the next "deployment layer" we can quickly see whether it was
+an application code change, configuration change or environment change that was introduced at the same time as an issue
+started hitting users.
+
+=== Coordinated Changes
+
+There are times in which an application change and a configuration or environment change must happen at the same time.
+Examples include:
+
+- The addition of a new data store (Redis)
+- Newly exposed application configuration
+- A new application feature that requires a system library
+
+By having both the application and the infrastructure in a single repository we can review both the application changes
+and the infrastructure changes in a single pull request and ensure they're released and tested in a coordinated way.
+
+Additionally any deployment artifacts generated can be directly traced back to a change in the `git` repository
+allowing operations team members to know exactly what code is running in production at any given time.
+
+== The Standard
+
+The littleman.co standard is derived from the requirements as above. The directory layout is as follows:
+
+[source,bash]
+----
+$ tree .
+
+├── bin
+├── build
+│   ├── ci
+│   └── container
+│       ├── Dockerfile
+│       └── etc
+├── deploy
+│   ├── ansible
+│   │   └── playbook.yml
+│   ├── docker-compose
+│   │   ├── docker-compose.yml
+│   │   └── mnt
+│   │       └── app
+│   └── helm
+├── docs
+├── LICENSE.txt
+├── README.adoc
+├── src
+└── web
+
+14 directories, 5 files
+----
+
+A https://github.com/littlemanco/boilr-gitrepo[new project was published on GitHub] with this post that describes the
+existing standards, formatted as https://github.com/tmrts/boilr[a `boilr` template].
+
+=== /
+
+[source,bash]
+----
+├── LICENSE.txt
+├── README.adoc
+├── .drone.yml
+├── .arclint
+----
+
+There are various files that are either required by convention or by project tooling to be in the root of the project.
+
+These include:
+
+- **LICENSE.txt**: The project license
+- **README.adoc**: Some basic description about the project
+- **.drone.yml**: The task runner / CI configuration for the project
+- **.arclint**: Configuration for the Arcanist lint runner
+
+== Build
+
+[source,bash]
+----
+└── build
+----
+
+Build configuration is expected to produce some sort of artifact, either consumed later in the build or deployed to some
+sort of environment.
+
+These include:
+
+=== CI
+
+[source,bash]
+----
+└── build
+    └── ci
+----
+
+Sometimes there are limitations with the build system that require additional procedural scripts to do some `$THING`.
+
+These are somewhat of an anti-pattern though; where possible, build tools that address the problems in a more abstract
+sense or reusable plugins in http://plugins.drone.io/[the style of `drone` plugins].
+
+=== Containers
+
+[source,bash]
+----
+└── build
+    └── container
+----
+
+Containers are the canonical deployment artifact used by littleman.co. They're build from the `Dockerfile` definition.
+
+Generally there is only one production container per project, though other containers may be used to assist with
+bespoke application build tasks. 
+
+== Deploy
+
+[source,bash]
+----
+└── deploy
+----
+
+The deployment folder contains any "infrastructure as code" configuration. There are various kinds that are in common
+use, including:
+
+=== Helm
+
+[source,bash]
+----
+└── deploy
+    └── helm
+        ├── Chart.yml
+        ├── templates
+        └── ...
+----
+
+Helm is a project for managing the definitions and lifecycle of Kubernetes objects. It is an opinionated way of
+packaging and vendoring software and there are 
+https://github.com/helm/charts/tree/master/stable[a number of pre-packaged bits of software].
+
+Each bit of software is packaged into a "chart". This chart includes:
+
+- Some metadata describing the software
+- The deployment definitions
+- The deployment definition configuration
+
+Usually a project only has a single chart. However, where there are multiple charts required to launch this project 
+each chart is nested in its own subdirectory:
+
+[source,bash]
+----
+└── deploy
+    └── helm
+        └── service-a
+            ├── Chart.yml
+            ├── templates
+            └── ...
+        └── service-b
+            ├── Chart.yml
+            └── ...
+----
+
+Generally speaking however, it is an anti-pattern to need multiple services for a single project. The project should be
+deployed as a single, https://en.wikipedia.org/wiki/Atomic_commit[atomic change]. These services are better organised
+https://helm.sh/docs/chart_template_guide/[in the subchart pattern].
+
+=== Ansible
+
+[source,bash]
+----
+└── deploy
+    └── ansible
+----
+
+Ansible is a tool for defining machine specifications and having them enforced. The layout within this folder should
+be https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html#directory-layout[the layout defined 
+by Ansible upstream], with the exception that each project is expected to only define one role. 
+
+=== Docker Compose
+
+[source,bash]
+----
+└── deploy
+    └── docker-compose
+----
+
+`docker-compose` is a tool that is useful for spinning up a "production like" environment in a limited way in the
+local development environment.
+
+Its scope is limited to local development by design.
+
+=== Docs
+
+[source,bash]
+----
+└── docs
+----
+
+Project specific documentation
+
+=== Src
+
+[source,bash]
+----
+└── src
+----
+
+All files associated with the application.
+
+If the application is interpreted this should be called "app".
+
+=== Web
+
+[source,bash]
+----
+└── web
+----
+
+The generated web application
+
+== In Conclusion
+
+Our tools shape our conceptual model of a project. When developing keeping things consistent reduces the amount we need
+to investigate given each different project before we can start diagnosing issues or adding features to that project and
+adopting a single project layout keeps things as consistent as possible. The things included in a `git` repository in
+littleman.co projects are all the things that are needed to deploy a project to users or subsequently change that 
+project's behaviour, given consistent underlying infrastructure. The layout is fairly straight forward but is subject
+to iteration, and has thus been https://github.com/littlemanco/boilr-gitrepo[pushed to GitHub]. Hopefully understanding
+how we structure projects will give you some guidance on how to structure your own projects, or invite questions as to
+whether your projects are currently structured to maximise clarity and consistency in your team.
