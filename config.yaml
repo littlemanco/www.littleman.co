@@ -46,5 +46,7 @@ params:
     and be as efficient as possible we generally only check email 1x per 24 hour period.
 
     [Objectives (2019)](/objectives-and-key-results/)
-  footerText: ⓒ Andrew Howden, 2019
+  footerText: |
+    ⓒ Andrew Howden, 2019 · We are on [Twitter](https://twitter.com/littlemanco),
+    [GitHub](https://github.com/littlemanco) and [Medium](https://medium.com/littlemanco).
   hideFooter: false
