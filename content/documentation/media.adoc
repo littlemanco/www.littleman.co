@@ -10,6 +10,9 @@ title: "Media"
 Media is any form of publication or distribution that littleman.co contributes to, distributes or otherwise partakes 
 in. Currently there is:
 
+- https://www.littleman.co/articles/[The Website]
+- https://dev.to/[dev.to]
+- https://hackernoon.com/[Hacker Noon]
 - https://medium.com/littlemanco[Medium]
 - https://twitter.com/littlemanco[Twitter]
 
@@ -29,3 +32,15 @@ Long form (160+ character) publications must be allocated a canonical category f
 | Deep Dive              | An in depth discussion of a given technical problem and solution                                  | Medium
 | Philosophy             | A discussion of the underlying beliefs behind the software development                            | Medium, Website
 |===
+
+== Publications
+
+=== General Process
+
+When writing a (long form) post, the process is as follows:
+
+1. Write the post up & publish it to littleman.co
+2. Verify the content against http://www.hemingwayapp.com/[the Hemingway app]
+3. Wait ~24 hours
+4. Re-read the content
+5. Publish the content to the distribution network
