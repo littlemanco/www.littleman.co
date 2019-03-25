@@ -14,23 +14,28 @@ authors:
 :bibtex-file: content/bibliography.bib
 :bibtex-style: ieee
 
-Version control is one of the more fundamental pieces of software development. It allows is to go back and forward
-through the projects history and understand who implemented each change and (hopefully) why they implemented that change
-in that design. It is an invaluable tool for use while understanding any given issue.
+Version control is one of the more fundamental pieces of software development. It allows developers to navigate through
+a projects history to understand who implemented each change, as well as why they did so. It is an invaluable tool for
+use while understanding any given issue.
 
-Canonically littleman.co uses `git` as its version control tool of choice. `git` is essentially the defacto standard of
-the software industry, having replaced Mercurial, Subversion and CVS. The majority of our development tooling and
-workflow is built on top of its primitives, including "patches", "branches", "tags" and so fourth. However `git`, for
-all of its opinions is remarkably silent about how to lay out a project.
+littleman.co uses git as its version control tool of choice. `git` is the defacto standard of the software industry, 
+having replaced Mercurial, Subversion and CVS.  The majority of our development tools and our workflow builds on top of 
+`git` primitives such as:
 
-This is a good thing for the tool but not necessarily for the developer. When reviewing a project for the purpose of
-understanding and debugging it the developer is looking to build a conceptual model of the project as quickly as
-possible, then spotting things that violate that conceptual model. When building these models consistency is prised
-above nearly all other properties as it reduces the amount of work a developer needs to do to make predictions about
-that project.
+- patches
+- branches
+- tags
 
-Accordingly it is a reasonable investment to ensure that all projects are laid out on disk consistently and that
-developers can easily understand and search through them for the things they require.
+And so forth. That said `git`, for all its opinions, is remarkably silent about how to lay out a project.
+
+This is a good thing for the tool but not necessarily for the developer. When first reading a project to understand and
+debug it a developer needs to build a model of that project as quickly as possible. They can then use that model to 
+make predictions about how the software should behave; as well, spotting things that violate such predictions. If we are
+able to keep projects consistent we are able to reduce the number of odd things developers need to investigate to find 
+the desired issue.
+
+Accordingly it's a good idea to structure all projects in the in the same way and that developers can easily understand 
+and search through them.
 
 == Existing Standards
 
