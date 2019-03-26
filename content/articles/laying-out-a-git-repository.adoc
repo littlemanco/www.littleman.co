@@ -1,7 +1,7 @@
 ---
 categories: ["Technical Analysis"]
 date: 2019-03-25
-description: "How littleman.co organises projects as well as why they do it in that way"
+description: "How littleman.co organises projects as well as why we do it in that way"
 slug: "laying-out-a-git-repository"
 tags: ["git", "layout"]
 title: "Laying out a git repository"
@@ -50,7 +50,7 @@ If one of these standards is in wide use in your organisation its best to contin
 https://xkcd.com/927/[adopt yet another standard]. However each of those standards have the limitation they're only
 used in the context of the language or build tooling they're defined in. In an environment such as littleman.co that
 includes many different languages, applications and other types of development these standards either do not define
-enough behaviour to be useful or define things that do not propagate well between langauges.
+enough behaviour to be useful or define things that do not propagate well between languages.
 
 == Determining the boundaries of a repository
 
@@ -75,7 +75,7 @@ of tasks such as:
 - Rolling back the application to its previous version in the case of failure
 - Creating testing environments
 
-And so fourth.
+And so forth.
 
 Deployments are the boundary that seems most useful to determine what should be in a single repository. For example,
 if the application is the only thing that should change in a single deployment it can be the only thing in that
