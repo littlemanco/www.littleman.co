@@ -1,0 +1,14 @@
+---
+date: 2019-03-27
+description: "Terminology used in littleman.co"
+title: "Terminology"
+---
+
+
+[cols='1,4']
+|===
+| Word | Meaning
+
+|[[project-owner]] Project Owner | The person who funds the project and is responsible for its overall strategy
+|[[developer]] Developer         | The person who implements software changes in version control
+|===
