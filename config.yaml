@@ -11,7 +11,7 @@ pygmentsCodefencesGuessSyntax: true
 pygmentsStyle: pygments
 
 taxonomies:
-  author: "authors"
+  contributor: "contributors"
   tag: "tags"
   category: "categories"
 

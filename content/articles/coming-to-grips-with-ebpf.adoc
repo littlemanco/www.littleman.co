@@ -5,6 +5,8 @@ description: "Understanding what (e)BPF is and what its used for"
 slug: "coming-to-grips-with-ebpf"
 tags: ["ebpf", "networking", "xdp"] 
 title: "Coming to grips with eBPF"
+contributors:
+- "Andrew Howden"
 ---
 
 = Coming to grips with eBPF

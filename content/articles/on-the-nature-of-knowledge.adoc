@@ -5,8 +5,8 @@ description: "Thinking about the nature of knowledge, and how I think about grow
 slug: "on-the-nature-of-knowledge"
 tags: ["meta"]
 title: "On the nature of knowledge"
-authors:
-  - "Andrew Howden"
+contributors:
+- "Andrew Howden"
 ---
 
 I have been extraordinarily lucky in my software development career. Given a limited set of experience and idle

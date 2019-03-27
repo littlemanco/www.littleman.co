@@ -5,9 +5,9 @@ description: "How littleman.co organises projects as well as why we do it in tha
 slug: "laying-out-a-git-repository"
 tags: ["git", "layout"]
 title: "Laying out a git repository"
-github-issue: 11  
-authors:
-  - "Andrew Howden"
+github-issue: 11
+contributors:
+- "Andrew Howden"
 ---
 
 = Laying out a git repository

@@ -5,8 +5,8 @@ description: "A discussion at the Meet Magento Poland conference of using Docker
 slug: "using-docker-for-fun-and-profit"
 tags: ["video", "Kubernetes", "docker"]
 title: "Using Docker for Fun & Profit   "
-authors:
-  - "Andrew Howden"
+contributors:
+- "Andrew Howden"
 ---
 
 video::RfxWY4PvinI[youtube]

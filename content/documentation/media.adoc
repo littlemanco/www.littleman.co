@@ -39,8 +39,64 @@ Long form (160+ character) publications must be allocated a canonical category f
 
 When writing a (long form) post, the process is as follows:
 
-1. Write the post up & publish it to littleman.co
+1. Write the post up & publish it to littleman.co.
 2. Verify the content against http://www.hemingwayapp.com/[the Hemingway app]
 3. Wait ~24 hours
 4. Re-read the content
 5. Publish the content to the distribution network
+
+A template for writing the article is below:
+
+[source]
+----
+---
+categories: []
+// Uncomment one:
+//  - "Labs"
+//  - "Case Study"
+//  - "Technical Analysis"
+//  - "Deep Dive"
+//  - "Philosophy"
+
+// Date in the form of "1970-01-01"
+date: __TODO__
+
+// A description used in search results, social media tags
+description: "__DESCRIPTION__"
+
+// How the URL should appear
+slug: "__this-is-a-url__"
+
+// A list of things that this article should talk about
+//
+// Try and pick ~ 4 tags. The list of previously used tags is at the following URL:
+// https://www.littleman.co/tags/
+//
+// When syndicated, the category should be an additional tag.
+tags: 
+  - "__TAG__"
+  - "__TAG__"
+  - "__TAG__"
+  - "__TAG__"
+
+// The header of the article
+title: "__TITLE__"
+
+// What GitHub issue the article is tracked by
+github-issue: 11
+
+// The path to images suitable for use with the article
+//
+// The images work best at 1000x420
+images:
+  - "/images/headers/architecting-a-software-system-for-malleability.png"
+
+// Who contributed to the article, written in the order of their contributions.
+contributors:
+  - "Andrew Howden"
+---
+
+== __TITLE__
+
+// Content
+----

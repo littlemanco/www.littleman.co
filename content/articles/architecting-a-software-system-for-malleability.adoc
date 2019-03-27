@@ -7,6 +7,8 @@ tags: ["architecture"]
 title: "Architecting a software system for malleability"
 images:
   - "/images/headers/architecting-a-software-system-for-malleability.png"
+contributors:
+- "Andrew Howden"
 ---
 
 = Architecting a software system for malleability
