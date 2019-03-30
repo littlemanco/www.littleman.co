@@ -1,0 +1,809 @@
+---
+categories:
+  - "Deep Dive"
+date: 2018-03-27
+description: "What is a container and how do they work"
+slug: "what-is-a-container"
+tags:
+  - "container"
+  - "docker"
+  - "namespace"
+  - "cgroup"
+title: "What is a container?"
+github-issue: 16
+images: []
+contributors:
+  - "Andrew Howden"
+--- 
+
+== What is a (Linux) container?
+  
+Containers have recently become a common way of packaging, deploying and running software across a wide set of machines
+in all sorts of environments. With the initial release of Docker in March, 2013^cite:[wikipedia.docker]^ containers have
+become ubiquitous in modern software deployment with 71% of Fortune 100 companies running it in some 
+capacity^cite:[redmonk.f100]^. Containers can be used for:
+
+- Running user facing, production software
+- Running a software development environment
+- Compiling software with its dependencies in a sandbox
+- Analysing the behaviour of software within a sandbox
+
+Like their namesake in the shipping industry containers are designed to easily "lift and shift" software to different
+environments and have that software execute in the same way across those environments.
+
+Containers have thus earned their place in the modern software development toolkit. However to understand how container
+technology fits into our modern software architecture its worth understanding how we arrived at containers, as well as
+how they work.
+
+NOTE: In this article we'll only be discussing Linux containers. There are container implementations on other operating
+      systems but we do not feel qualified to discuss those just yet.
+
+TIP: Although there are containers implemented on other operating systems Linux containers are in common use in both
+     MacOS and Windows. In both of those operating systems these are implemented by way of virtualized hardware -- 
+     a virtual machine.
+
+=== History
+
+The "birth" of containers was denoted by Bryan Cantrill as March 18th, 1982^cite:[youtube.bryancantrill.revolution]^ with
+the addition of the `chroot` syscall in BSD. From the FreeBSD website^cite:[bsd.jail]^:
+
+[quote, Dr. Marshall Kirk Mckusick]  
+____
+According to the SCCS logs, the chroot call was added by Bill Joy on March 18, 1982 approximately 1.5 years before 
+4.2BSD was released. That was well before we had ftp servers of any sort (ftp did not show up in the source tree until
+January 1983). My best guess as to its purpose was to allow Bill to chroot into the /4.2BSD build directory and build 
+a system using only the files, include files, etc contained in that tree. That was the only use of chroot that I 
+remember from the early days.
+____
+
+`chroot` is used to put a process into a "changed root"; a new root filesystem that has limited or no access to the
+parent root filesystem. An extremely minimal `chroot` can be created on Linux as follows^cite:[sagar.chroot]^:
+
+[source,bash]
+----
+# Get a shell
+$ cd $(mktemp -d)
+$ mkdir bin
+$ $(which sh) bin/bash
+
+# Find shared libraries required for shell
+$ ldd bin/sh
+	linux-vdso.so.1 (0x00007ffe69784000)
+	/lib/x86_64-linux-gnu/libsnoopy.so (0x00007f6cc4c33000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f6cc4a42000)
+	libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f6cc4a21000)
+	libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f6cc4a1c000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f6cc4c66000)
+
+# Duplicate libraries into root
+$ mkdir -p lib64 lib/x86_64-linux-gnu
+$ cp /lib/x86_64-linux-gnu/libsnoopy.so \
+    /lib/x86_64-linux-gnu/libc.so.6 \
+    /lib/x86_64-linux-gnu/libpthread.so.0 \
+    /lib/x86_64-linux-gnu/libdl.so.2 \
+    lib/x86_64-linux-gnu/
+
+$ cp /lib64/ld-linux-x86-64.so.2 lib64/
+
+# Change into that root
+$ sudo chroot .
+
+# Test the chroot
+# ls
+/bin/bash: 1: ls: not found
+# 
+----
+
+There were problems with this early implementation of `chroot`, such as being able to exit that `chroot` by running
+`cd..`^cite:[youtube.bryancantrill.revolution]^, but these were resolved in short order. Seeking to provide better
+security FreeBSD extended the `chroot` into the `jail`^cite:[youtube.bryancantrill.revolution]cite:[bsd.jail]^ which
+allowed running software that desired to run as `root` and running it within a confined environment that was `root`
+within that environment but not `root` elsewhere on the system.
+
+This work was further built upon in the Solaris operating system to provide fuller isolation from the 
+host^cite:[youtube.bryancantrill.revolution]^^cite:[joyant.zones]^:
+
+- User separation (similar to `jail`)
+- Filesystem separation (similar to `chroot`)
+- A separate process space
+
+Providing something similar to the modern concept of containers; processes running on the same kernel. 
+
+However, in parallel Amazon Web Services (AWS) launched their Elastic Compute Cloud (EC2) product which took a different
+approach to separating out workloads: virtualising _the entire hardware_^cite:[youtube.bryancantrill.revolution]^. This
+has some different tradeoffs; it limits exploitation of the host kernel or isolation implementation however running the
+additional operating system and hypervisor meant a far less efficient use of resources.
+
+Virtualisation continued to dominate workload isolation until the company "dotcloud" (now Docker), then operating as
+a "platform as a service" (PAAS) offering, open sourced the software they used to run their PAAS. With that software and
+a large amount of luck containers proliferated rapidly until Docker became the power house it is now.
+
+// TOdo: Mention rkt, open container and so fourth.
+
+=== Definition
+
+It might be surprising to learn that a "container" is not a real thing -- rather, it is a specification. At the time of
+writing this specification has implementations on^cite:[github.opencontainers.runtime]:
+
+- Linux
+- Windows
+- Solaris
+- Virtual Machines
+
+In turn, containers are expected to be^cite:[github.opencontainers.principles]^:
+
+1. Consumable with a set of standard, interoperable tools
+2. Consistent regardless of what type of software is being run
+3. Agnostic to the underlying infrastructure the container is being run on
+4. Designed in a way that makes automation easy
+5. Of excellent quality
+
+There are specifications that dictate how containers should reach these principles by defining how they should be
+executed (the runtime specification^cite:[github.opencontainers.runtime]^), what a container should contain
+(the image specification^cite:[github.opencontainers.image]^) and how to distribute container "images" (the
+distribution specification^cite:[github.opencontainers.distribution]^).
+
+These specifications mean that a wide variety of tools can be used to interact with containers. The canonical tool that
+is in most common use is the Docker tool, which in addition to manipulating containers provides container build tooling
+and some limited orchestration of containers. However, there are a number of container runtimes:
+
+- https://www.docker.com/[Docker]
+- https://github.com/rkt/rkt[Rkt]
+- https://cri-o.io/[cri-o]
+- https://discuss.linuxcontainers.org/t/lxc-3-0-0-has-been-released/1449[LXC]
+- https://github.com/clearcontainers/runtime["Clear Containers"]
+
+As well as other tools that help with building or distributing images.
+
+Lastly, there are extensions to the existing standards, such as the 
+https://github.com/containernetworking/cni[container networking interface], which define additional behaviour where the
+standards are not yet clear enough.
+
+=== Implementation
+
+// Todo: Mention "sandboxing"
+
+While the standards give us some idea as to what a container is and how they should work, it's perhaps useful to
+understand how a container implementation works. Not all container runtimes are implemented in this way; notably, 
+kata containers implement hardware virtualisation as alluded to earlier with EC2.
+
+With that said let's dive in to the Docker implementation^cite:[docker.overview]^. This uses a series of technologies
+exposed by the underlying kernel:
+
+==== Namespaces
+
+// Isolation: Kernel structures
+
+The `man namespaces` command defines namespaces as follows:
+
+> A namespace wraps a global system resource in an abstraction that makes it appear to the processes within the 
+> namespace that they have their own isolated instance of the global resource. Changes to the global resource are 
+> visible to other processes that are members of the namespace, but are invisible to other processes. One use of 
+> namespaces is to implement containers.
+
+Paraphrased, a namespace is a slice of the system that, from within that slice, a process cannot see the rest of the
+system.
+
+A process must make a system call to the Linux kernel to changes its namespace. There are several system calls:
+
+- `clone`: Create a new process. When used in conjunction with `CLONE_NEW*` it creates a namespace of the kind
+           specified. For example, if used with `CLONE_NEWPID` the process will enter a new `pid` namespace and become
+           `pid 1`
+- `setns`: Allows the calling process to join an existing namespace, specified under `/proc/[pid]/ns`
+- `unshare`: Moves the calling process into a new namespace
+
+There is a user command also called `unshare` which allows us to experiment with namespaces. We can put ourselves into
+a separate process and network namespace with the following command:
+
+[source,bash]
+----
+# Scratch space
+$ cd $(mktemp -d)
+
+# Fork is required to spawn new processes, and proc is mounted to give accurate process information
+$ sudo unshare \
+    --fork \
+    --pid \
+    --mount-proc \
+    --net
+
+# Here we see that we only have access to the loopback interface
+root@sw-20160616-01:/tmp/tmp.XBESuNMJJS# ip addr
+1: lo: <LOOPBACK> mtu 65536 qdisc noop state DOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+
+# Here we see that we can only see the first process (bash) and our `ps aux` invocation
+root@sw-20160616-01:/tmp/tmp.XBESuNMJJS# ps aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.3  0.0   8304  5092 pts/7    S    05:48   0:00 -bash
+root         5  0.0  0.0  10888  3248 pts/7    R+   05:49   0:00 ps aux
+----
+
+Docker uses the following namespaces to limit the ability for a process running in the container to see resources
+outside that container:
+
+- The `pid` namespace: Process isolation (PID: Process ID).
+- The `net` namespace: Managing network interfaces (NET: Networking).
+- The `ipc` namespace: Managing access to IPC resources (IPC: InterProcess Communication).
+- The `mnt` namespace: Managing filesystem mount points (MNT: Mount).
+- The `uts` namespace: Isolating kernel and version identifiers. (UTS: Unix Timesharing System).
+
+These provide reasonable separation between processes such that workloads should not be able to interfere with each
+other. However there is a notable caveat: 
+**we can disable some of this isolation**^cite:[youtube.jfrazelle.containers-crazy].
+
+This is an extremely useful property. One example of this would be for system daemons that need access to the host
+network to bind ports on the host^cite:[docker.hostnamespace]^, such as running a DNS service or service proxy in
+a container.
+
+TIP: Process #1 or the `init` process in Linux systems has some additional responsibilities. When processes terminate
+     in Linux they are not automatically cleaned up, but rather simply enter a terminated state. It is the 
+     responsibility of the init process to "reap" those processes, deleting them so that their process ID can be
+     reused^cite:[krallin.tini]^. Accordingly the first process run in a Linux namespace should be an `init` process,
+     and not a user facing process like `mysql`. This is known as the _zombie reaping problem_.
+
+TIP: Another place namespaces are used is the Chromium browser^cite:[chrome.sandboxing]^. Chromium uses at least the 
+     `setuid` and `user` namespaces.
+
+==== Control Groups
+
+// Isolation: System resources
+
+The kernel documentation for `cgroups` defines the cgroup as follows:
+
+> Control Groups provide a mechanism for aggregating/partitioning sets of tasks, and all their future children, into
+> hierarchical groups with specialized behaviour.
+
+That doesn't really tell us much though. Luckily it expands:
+
+> On their own, the only use for cgroups is for simple job tracking. The intention is that other subsystems hook into
+> the generic cgroup support to provide new attributes for cgroups, such as accounting/limiting the resources which 
+> processes in a cgroup can access. For example, cpusets (see Documentation/cgroup-v1/cpusets.txt) allow you to 
+> associate a set of CPUs and a set of memory nodes with the tasks in each cgroup.
+
+So, `cgroups` are a groups of "jobs" that other systems can assign meaning to. The systems that currently use this
+`cgroup` systems:
+
+- https://www.kernel.org/doc/Documentation/cgroup-v1/cpusets.txt[CPU]
+- https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt[Memory]
+- https://www.kernel.org/doc/Documentation/cgroup-v1/pids.txt[PIDs]
+- https://www.kernel.org/doc/Documentation/cgroup-v1/net_prio.txt[Network Priority]
+
+As well as various others.
+
+`cgroups` are manipulated by reading and writing to the `/proc` filesystem. For example:
+
+[source,bash]
+----
+# Create a cgroup called "me"
+$  mkdir /sys/fs/cgroup/memory/me
+
+# Allocate the cgroup a max of 100Mb memory
+$ echo '100000000' | sudo tee /sys/fs/cgroup/memory/me/memory.limit_in_bytes
+
+# Move this proess into the cgroup
+$ echo $$  | sudo tee /sys/fs/cgroup/memory/me/cgroup.procs
+5924
+----
+
+That's it! This process should now be limited to 100Mb total usage
+
+Docker uses the same functionality in its `--memory` and `--cpus` arguments, and it is employed by the orchestration
+systems Kubernetes and Apache Mesos to determine where to schedule workloads.
+
+TIP: Although `cgroups` are most commonly associated with containers they're already used for other workloads. The best
+     example is perhaps `systemd`, which automatically puts all services into a `cgroup` if the CPU scheduler is
+     enabled in the kernel^cite:[0pointer.resources]^. `systemd` services are ... kind of containers!
+
+==== Seccomp
+
+While both namespaces and `cgroups` go a significant way to isolating processes into their own containers Docker goes
+further than that to restrict what access the process can have to the Linux kernel itself. This is enforced in supported
+operating systems via "SECure COMPuting with filters", also known as `seccomp-bpf` or simply `seccomp`.
+
+The Linux kernel user space API guide defines `seccomp` as:
+
+> Seccomp filtering provides a means for a process to specify a filter for incoming system calls. The filter is 
+> expressed as a Berkeley Packet Filter (BPF) program, as with socket filters, except that the data operated on is 
+> related to the system call being made: system call number and the system call arguments.
+
+BPF in turn is a small, in-kernel virtual machine language used in a number of kernel tracing, networking and other
+tasks^cite:[lmc.ebpf-intro]^. Whether the system supports seccomp can be determined by running the following 
+command^cite:[docker.seccomp]^:
+
+[source,bash]
+----
+$ grep CONFIG_SECCOMP= /boot/config-$(uname -r)
+
+# Our system supports seccomp
+CONFIG_SECCOMP=y 
+----
+
+Practically this limits a processes ability to ask the kernel to do certain things. Any system call can be restricted,
+and docker allows the use of arbitrary seccomp "profiles" via its `--security-opt` argument^cite:[docker.seccomp]^:
+
+[source,bash]
+----
+docker run --rm \
+  -it \
+  --security-opt seccomp=/path/to/seccomp/profile.json \
+  hello-world
+----
+
+However, most usefully Docker provides a default security profile that limits some of the more dangerous system calls
+that processes run from a container should never need to make, including:
+
+- `clone`: The ability to clone new namespaces
+- `bpf`: The ability to load and run `bpf` programs
+- `add_key`: The ability to access the kernel keyring
+- `kexec_load`: The ability to load a new linux kernel
+
+As well as many others. The full list of syscalls blocked by default is
+https://docs.docker.com/engine/security/seccomp/[available on the Docker website].
+
+In addition to `seccomp` there are other ways to ensure containers are behaving as expected, including:
+
+- Linux Capabilities^cite:[docker.sec.capabilities]^
+- SELinux
+- AppArmour
+- AuditD
+- Falco^cite:[sysdig.falco.discussion]^
+
+Each of which take slightly different approaches of ensuring the process is only executed within expected behaviour.
+It's worth spending time to investigate the tradeoffs of each of these security decisions or simply delegating the
+choice to a competent third party provider.
+
+Additionally it's worth noting that even though Docker defaults to enabling the `seccomp` policy, orchestration
+systems such as `kubernetes` may disable it^cite:[kubernetes.pod-security-policy]^.
+
+==== Union File System
+
+To generate a container Docker requires a set of "build instructions". A trivial image could be:
+
+[source,bash]
+----
+# Scrath space
+$ cd $(mktemp -d)
+
+# Create a docker file
+$ cat <<EOF > Dockerfile
+FROM debian:buster
+
+# Create a test directory
+RUN mkdir /test
+
+# Create a bunch of spam files
+RUN echo $(date) > /test/a
+RUN echo $(date) > /test/b
+RUN echo $(date) > /test/c
+
+EOF
+
+# Build the image
+$ docker build .
+Sending build context to Docker daemon  4.096kB
+Step 1/5 : FROM debian:buster
+ ---> ebdc13caae1e
+Step 2/5 : RUN mkdir /test
+ ---> Running in a9c0fa1a56c7
+Removing intermediate container a9c0fa1a56c7
+ ---> 6837541a46a5
+Step 3/5 : RUN echo Sat 30 Mar 18:05:24 CET 2019 > /test/a
+ ---> Running in 8b61ca022296
+Removing intermediate container 8b61ca022296
+ ---> 3ea076dcea98
+Step 4/5 : RUN echo Sat 30 Mar 18:05:24 CET 2019 > /test/b
+ ---> Running in 940d5bcaa715
+Removing intermediate container 940d5bcaa715
+ ---> 07b2f7a4dff8
+Step 5/5 : RUN echo Sat 30 Mar 18:05:24 CET 2019 > /test/c
+ ---> Running in 251f5d00b55f
+Removing intermediate container 251f5d00b55f
+ ---> 0122a70ad0a3
+Successfully built 0122a70ad0a3
+----
+
+This creates a docker image with the id of `0122a70ad0a3` containing the contents of `date` at `a`, `b` and `c`.
+We can verify this by starting the container and examining its contents:
+
+[source,bash]
+----
+$ docker run \
+  --rm=true \
+  -it \
+  0122a70ad0a3 \
+  /bin/bash
+
+$ cd /test
+$ ls
+a  b  c
+$ cat *
+
+Sat 30 Mar 18:05:24 CET 2019
+Sat 30 Mar 18:05:24 CET 2019
+Sat 30 Mar 18:05:24 CET 2019
+----
+
+However, in the `docker build` command earlier Docker created several images. If we run the image after only `a` and `b`
+have been executed we will not see `c`:
+
+[source,bash]
+----
+$ docker run \
+  --rm=true \
+  -it \
+  07b2f7a4dff8 \
+  /bin/bash
+$ ls test
+a  b
+----
+
+Docker is not creating a whole new filesystem for each of these images. Instead, each of the images are layered on top
+of each other. If we query Docker we can see each of the layers that go into a given image:
+
+[source,bash]
+----
+$ docker history 0122a70ad0a3
+IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
+0122a70ad0a3        5 minutes ago       /bin/sh -c echo Sat 30 Mar 18:05:24 CET 2019…   29B                 
+07b2f7a4dff8        5 minutes ago       /bin/sh -c echo Sat 30 Mar 18:05:24 CET 2019…   29B                 
+3ea076dcea98        5 minutes ago       /bin/sh -c echo Sat 30 Mar 18:05:24 CET 2019…   29B                 
+6837541a46a5        5 minutes ago       /bin/sh -c mkdir /test                          0B                  
+ebdc13caae1e        12 months ago       /bin/sh -c #(nop)  CMD ["bash"]                 0B                  
+<missing>           12 months ago       /bin/sh -c #(nop) ADD file:2219cecc89ed69975…   106MB  
+----
+
+This allows docker to reuse vast chunks of what it downloads. For example, given the image we built earlier we can see
+that it uses:
+
+1. A layer called `ADD file:...` -- this is the Debian Buster root filesystem at 106MB
+2. A layer for `a` that renders the date to disk at 29B
+3. A layer for `b` that renders the date to disk at 29B
+
+And so on. Docker will reuse the `Add file:...` Debian Buster root for all image that start with `FROM: debian:buster`.
+
+This allows Docker to be extremely space efficient if possible, reusing the same operating system image for multiple
+different executions. 
+
+TIP: Even though Docker is extremely space efficient the docker library on disk can grow extremely large and
+     transferring large docker images over the network can become expensive. Therefore, try to reuse image layers where
+     possible and prefer smaller operating systems or the `scratch` (nothing) image where possible.
+
+These layers are implemented via a Union Filesystem, or UnionFS. There are various "backends" or filesystems that can
+implement this approach:
+
+- `overlay2`
+- `devicemapper`
+- `aufs`
+
+Generally speaking the package manager on our machine will include the appropriate underlying filesystem driver;
+docker supports many:
+
+[source,bash]
+----
+$ docker info | grep Storage
+Storage Driver: overlay2
+----
+
+We can replicate this implementation with our overlay mount fairly easily^cite:[so.overlay2]^:
+
+[source,bash]
+----
+# scratch
+cd $(mktemp -d)
+
+# Create some layers
+$ mkdir \
+  lower \
+  upper \
+  workdir \
+  overlay
+
+# Create some files that represent the layers
+$ touch lower/i-am-the-lower
+$ touch higher/i-am-the-higher
+
+# Create the layered filesystem at overlay with lower, upper and workdir
+$ mount -t overlay \
+    -o lowerdir=lower,upperdir=upper,workdir=workdir \
+    ./overlay \
+    overlay
+
+# List the directory
+$ ls overlay/
+i-am-the-lower  i-am-the-upper
+----
+
+Docker goes so far as to nest those layers until the multi-layered filesystem has been successfully implemented.
+
+Files that are written are written back to the `upper` directory, in the case of `overlay2`. However Docker will
+generally dispose of these temporary files when the container is removed.
+
+TIP: Generally speaking all software needs access to shared libraries found in static paths in Linux operating systems.
+     Accordingly it is the convention to simply ship a stripped down version of an operating systems root file system
+     such that users can install and applications can find the libraries they expect. However, it is possible to use
+     an empty filesystem and a statically compiled binary with the `scratch` image type.
+
+==== Networking
+
+While a lot of the value in containers in the building, shipping and execution of code in a consistent way across
+different infrastructure fairly safely another significant value proposition is the way containers handle networking and
+service discovery.
+
+As mentioned earlier, containers make use of Linux namespaces. Of particular interest when understanding container
+networking is the network namespace. This namespace gives the process separate:
+
+- (virtual) ethernet devices
+- routing tables
+- `iptables` rules
+
+For example,
+
+[source,bash]
+----
+# Create a new network namespace
+$ sudo unshare --fork --net
+
+# List the ethernet devices with associated ip addresses
+$ ip addr
+1: lo: <LOOPBACK> mtu 65536 qdisc noop state DOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+
+# List all iptables rules
+root@sw-20160616-01:/home/andrewhowden# iptables -L
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+# List all network routes
+$ ip route show
+----
+
+By default, the container has no network connectivity -- not even the `loopback` adapter is up. We cannot even ping
+ourselves!
+
+[source,bash]
+----
+$ ping 127.0.0.1
+PING 127.0.0.1 (127.0.0.1): 56 data bytes
+ping: sending packet: Network is unreachable
+----
+
+We can start setting up the expected network environment by bringing up the `loopback` adapter:
+
+[source,bash]
+----
+$ ip link set lo up
+root@sw-20160616-01:/home/andrewhowden# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+
+# Test the loopback adapter 
+$ ping 127.0.0.1
+PING 127.0.0.1 (127.0.0.1): 56 data bytes
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.092 ms
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.068 ms
+----
+
+However, we cannot access the outside world. In most environments our host machine will be connected via ethernet to a given 
+network and either have an IP assigned to it via the cloud provider or, in the case of a development or office machine, 
+request an IP via DHCP. However our container is in a network namespace of its own and has no knowledge of the ethernet
+connected to the host. To connect the container to the host we need to employ a `veth` device.
+
+`veth`, or "Virtual Ethernet Device" is defined by `man vetTo create a `veth` device we can run as:
+
+> The veth devices are virtual Ethernet devices. They can act as tunnels between network namespaces to create a
+> bridge to a physical network device in another namespace, but can also be used as standalone network devices.
+
+This is exactly what we need! Because `unshare` creates an anonymous network namespace we need to determine what the
+`pid` of the process started in that namespace is^cite:[so.anon-veth]cite:[igalia.network-namespaces]^:
+  
+[source,bash]
+----
+$ echo $$
+18171
+----
+
+We can then create the `veth` device:
+
+[source,bash]
+----
+$ sudo ip link add veth0 type veth peer name veth0 netns 18171
+----
+
+We can see both on the host and the guest these virtual ethernet devices appear. However, neither has an IP attached
+nor any routes defined:
+
+[source,bash]
+----
+# Container
+
+$ ip addr
+1: lo: <LOOPBACK> mtu 65536 qdisc noop state DOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: veth0@if7: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether 16:34:52:54:a2:a1 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+$ ip route show
+
+# No output
+----
+
+To address that we simply add an IP and define the default route:
+
+[source,bash]
+----
+# On the host
+$ ip addr add 192.168.24.1 dev veth0
+
+# Within the container
+$ ip address add 192.168.24.10 dev veth0
+----
+
+From there, bring the devices up:
+
+[source,bash]
+----
+# Both host and container
+$ ip link set veth0 up
+----
+
+Add a route such that `192.168.24.0/24` goes out via `veth0`:
+
+[source,bash]
+----
+# Both host and guest
+ip route add 192.168.24.0/24 dev veth0
+----
+
+And voilà! We have connectivity to the host namespace and back:
+
+[source,bash]
+----
+# Within container
+$ ping 192.168.24.1
+PING 192.168.24.1 (192.168.24.1): 56 data bytes
+64 bytes from 192.168.24.1: icmp_seq=0 ttl=64 time=0.149 ms
+64 bytes from 192.168.24.1: icmp_seq=1 ttl=64 time=0.096 ms
+64 bytes from 192.168.24.1: icmp_seq=2 ttl=64 time=0.104 ms
+64 bytes from 192.168.24.1: icmp_seq=3 ttl=64 time=0.100 ms
+----
+
+However, that does not give us access to the wider internet. While the `veth` adapter functions as a virtual cable
+between our container and our host, there is currently no path from our container to the internet:
+
+[source,bash]
+----
+# Within container
+$ ping google.com
+ping: unknown host
+----
+
+To create such a path we need to modify our host such that it functions as a "router" between its own, separated network
+namespaces and its internet facing adapter.
+
+Luckily, Linux is set up well for this purpose. First, we need to modify the normal behaviour of Linux from dropping
+packets not destined for IP addresses with which their associated but rather allow forwarding a packet from one
+adapter to the other:
+
+[source,bash]
+----
+# Within container
+$ echo 1 > /proc/sys/net/ipv4/ip_forward
+----
+
+That means when we request public facing IPs from within our container via our `veth` adapter to our host `veth`
+adapter the host adapter won't simply drop those packets.
+
+From there we employ `iptables` rules on the host to forward traffic from the host `veth` adapter to the internet
+facing adapter -- in this case `wlp2s0`:
+
+[source,bash]
+----
+# On the host
+# Forward packets from the container to the host adapter
+iptables -A FORWARD -i veth0 -o wlp2s0 -j ACCEPT
+
+# Forward packets that have been established via egress from the host adapater back to the contianer
+iptables -A FORWARD -i wlp2s0 -o veth0 -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Relabel the IPs for the container so return traffic will be routed correctly
+iptables -t nat -A POSTROUTING -o wlp2s0 -j MASQUERADE
+----
+
+We then tell our container to send traffic it doesn't know anything else about down the `veth` adapter:
+
+[source,bash]
+----
+# Within the container
+$ ip route add default via 192.168.24.1 dev veth0
+----
+
+And the internet works!
+
+[source,bash]
+----
+$ # ping google.com
+PING google.com (172.217.22.14): 56 data bytes
+64 bytes from 172.217.22.14: icmp_seq=0 ttl=55 time=16.456 ms
+64 bytes from 172.217.22.14: icmp_seq=1 ttl=55 time=15.102 ms
+64 bytes from 172.217.22.14: icmp_seq=2 ttl=55 time=34.369 ms
+64 bytes from 172.217.22.14: icmp_seq=3 ttl=55 time=15.319 ms
+----
+
+As mentioned, each container implementation can implement networking differently. There are implementations that use
+the aforementioned `veth` pair, `vxlan`, `BPF` or other cloud specific implementations. However, when designing
+containers we need some way to reason about what behaviour we should expect.
+
+To help address this the https://github.com/containernetworking/cni["Container Network Interface"] tooling has been
+designed. This allows defining consistent network behaviour across network implementations, as well as models such as
+Kubernetes shared `lo` adapter between several containers.
+
+The networking side of containers is an area undergoing rapid innovation but relying on:
+
+1. A `lo` interface
+2. A public facing `eth0` (or similar) interface
+
+being present seems a fairly stable guarantee.
+
+=== Landscape review
+
+Given our understanding of the implementation of containers we can now take a look at some of the classic docker
+discussions.
+
+==== Systems Updates
+
+One of the oft overlooked parts of containers is the necessity to keep both them, and the host system up to date.
+
+In modern systems it is quite common to simply enable automatic updates on host systems and, so long as we stick to the
+system package manager and ensure updates stay successful, the system will keep itself both up to date and stable.
+
+However, containers take a very different approach. They're effectively giant static binaries deployed into a production
+system. In this capacity they can do no self maintenance.
+
+Accordingly even if there are no updates to the software the container runs, containers should be periodically rebuilt
+and redeployed to the production system -- less they accumulate vunlerabilities over time.
+
+==== Init within contianer
+
+Given our understanding of containers its reasonable to consider the "1 process per container" advice and determine that
+it is an oversimplification of how containers work, and it makes sense in some cases to do service management within
+a container with a system like `runit`.
+
+This allows multiple processes to be executed within a single container including things like:
+
+- `syslog`
+- `logrotate`
+- `cron`
+
+And so fourth.
+
+In the case where Docker is the only system that is being used it is indeed reasonable to think about doing service
+management within docker -- particularly when hitting the constraints of shared filesystem or network state. However
+systems such as Kubernetes, Swarm or Mesos have replaced much of the necessity of these init systems; tasks such as
+log aggregation, restarting services or colocating services are taken care of by these tools.
+
+Accordingly its best to keep containers simple such that they are maximally composable and easy to debug, delegating
+the more complex behaviour out.
+
+=== In Conclusion
+
+Containers are an excellent way to ship software to production systems. They solve a swathe of interesting problems
+and cost very little as a result. However, their rapid growth has meant some confusion in industry as to exactly
+how they work, whether they're stable and so fourth. Containers are a combination of both old and new Linux kernel
+technology such as namespaces, cgroups, seccomp and other Linux networking tooling but are as stable as any other 
+kernel technology (so, very) and well suited for production systems.
+
+<3 for making it this far.
+
+== References
+
+bibliography::[]
