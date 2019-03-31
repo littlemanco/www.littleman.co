@@ -100,3 +100,54 @@ contributors:
 
 // Content
 ----
+
+== Styleguide
+
+=== Admonitions
+
+Admonitions are used to draw a reader to a particular, otherwise unspoken tip, caveat or warning. In `asciidoctor` the
+syntax is as follows:
+
+[source,markdown]
+----
+NOTE: This is a note
+----
+
+The supported admonitions and their intended usage is as follows:
+
+NOTE: Clarifications. For example: "This page is the styleguide and employs demonstration content"
+
+TIP: Advice. For example, "TIP is best used for the sort of additional, non critical but perhaps helpful advice"
+
+CAUTION: A warning that clarifies a thing that might not otherwise be expected
+
+The following are available, but not recommended for use.
+
+IMPORTANT: Content that is the "main" point of the article.
+
+WARNING: A stronger caution
+
+=== References
+
+References are used to illustrate from where information came from. In `asciidoctor` the syntax used is:
+
+[source,markdown]
+----
+This is a sentence. It has a reference which is dope^cite:[citation.reference]^
+----
+
+At the bottom of the article a section should appear as follows:
+
+[source,markdown]
+----
+== References 
+
+bilbiography::[]
+----
+
+As much as possible, content should be referenced with links to the third party resource or material that is referenced.
+For this site, references are stored globally in 
+https://github.com/littlemanco/www.littleman.co/blob/master/bibliography.bib[the bibtex file].
+
+CAUTION: Do not use links to reference material. Links do not transfer to other media (such as print) well and do not
+         provide about the information at a glance within the article.
