@@ -11,8 +11,6 @@ contributors:
 ---
 
 = Laying out a git repository
-:bibtex-file: content/bibliography.bib
-:bibtex-style: ieee
 
 Version control is one of the more fundamental pieces of software development. It allows developers to navigate through
 a projects history to understand who implemented each change, as well as why they did so. It is an invaluable tool for

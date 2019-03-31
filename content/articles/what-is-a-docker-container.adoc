@@ -107,7 +107,9 @@ host^cite:[youtube.bryancantrill.revolution]^^cite:[joyant.zones]^:
 - Filesystem separation (similar to `chroot`)
 - A separate process space
 
-Providing something similar to the modern concept of containers; processes running on the same kernel. 
+Providing something similar to the modern concept of containers; processes running on the same kernel. Later, similar 
+work took place in the Linux kernel to isolate kernel structures on a per-process basis under 
+"namespaces"^cite:[lwn.namespaces]^. 
 
 However, in parallel Amazon Web Services (AWS) launched their Elastic Compute Cloud (EC2) product which took a different
 approach to separating out workloads: virtualising _the entire hardware_^cite:[youtube.bryancantrill.revolution]^. This
