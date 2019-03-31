@@ -16,6 +16,8 @@ contributors:
   - "Andrew Howden"
 --- 
 
+= What is a container?
+
 Containers have recently become a common way of packaging, deploying and running software across a wide set of machines
 in all sorts of environments. With the initial release of Docker in March, 2013^cite:[wikipedia.docker]^ containers have
 become ubiquitous in modern software deployment with 71% of Fortune 100 companies running it in some 
@@ -40,7 +42,7 @@ TIP: Although there are containers implemented on other operating systems Linux 
      MacOS and Windows. In both of those operating systems these are implemented by way of virtualized hardware -- 
      a virtual machine.
 
-=== History
+== History
 
 The "birth" of containers was denoted by Bryan Cantrill as March 18th, 1982^cite:[youtube.bryancantrill.revolution]^ with
 the addition of the `chroot` syscall in BSD. From the FreeBSD website^cite:[bsd.jail]^:
@@ -130,7 +132,7 @@ container standard.
 
 There are now a number of container implementations, as well as a number of standards to define their behaviour.
 
-=== Definition
+== Definition
 
 It might be surprising to learn that a "container" is not a real thing -- rather, it is a specification. At the time of
 writing this specification has implementations on^cite:[github.opencontainers.runtime]:
@@ -169,7 +171,7 @@ Lastly, there are extensions to the existing standards, such as the
 https://github.com/containernetworking/cni[container networking interface], which define additional behaviour where the
 standards are not yet clear enough.
 
-=== Implementation
+== Implementation
 
 While the standards give us some idea as to what a container is and how they should work, it's perhaps useful to
 understand how a container implementation works. Not all container runtimes are implemented in this way; notably, 
@@ -184,7 +186,7 @@ The problems being solved by containers are:
 With that said let's dive in to the Docker implementation^cite:[docker.overview]^. This uses a series of technologies
 exposed by the underlying kernel:
 
-==== Kernel feature isolation: namespaces
+=== Kernel feature isolation: namespaces
 
 The `man namespaces` command defines namespaces as follows:
 
@@ -257,7 +259,7 @@ TIP: Process #1 or the `init` process in Linux systems has some additional respo
 TIP: Another place namespaces are used is the Chromium browser^cite:[chrome.sandboxing]^. Chromium uses at least the 
      `setuid` and `user` namespaces.
 
-==== Resource isolation: control groups
+=== Resource isolation: control groups
 
 The kernel documentation for `cgroups` defines the cgroup as follows:
 
@@ -305,7 +307,7 @@ TIP: Although `cgroups` are most commonly associated with containers they're alr
      example is perhaps `systemd`, which automatically puts all services into a `cgroup` if the CPU scheduler is
      enabled in the kernel^cite:[0pointer.resources]^. `systemd` services are ... kind of containers!
 
-==== Userland isolation: seccomp
+=== Userland isolation: seccomp
 
 While both namespaces and `cgroups` go a significant way to isolating processes into their own containers Docker goes
 further than that to restrict what access the process can have to the Linux kernel itself. This is enforced in supported
@@ -366,7 +368,7 @@ choice to a competent third party provider.
 Additionally it's worth noting that even though Docker defaults to enabling the `seccomp` policy, orchestration
 systems such as `kubernetes` may disable it^cite:[kubernetes.pod-security-policy]^.
 
-==== Distribution: the union file system
+=== Distribution: the union file system
 
 To generate a container Docker requires a set of "build instructions". A trivial image could be:
 
@@ -534,7 +536,7 @@ TIP: Generally speaking all software needs access to shared libraries found in s
      such that users can install and applications can find the libraries they expect. However, it is possible to use
      an empty filesystem and a statically compiled binary with the `scratch` image type.
 
-==== Connectivity: networking
+=== Connectivity: networking
 
 As mentioned earlier, containers make use of Linux namespaces. Of particular interest when understanding container
 networking is the network namespace. This namespace gives the process separate:
@@ -760,12 +762,12 @@ The networking side of containers is an area undergoing rapid innovation but rel
 
 being present seems a fairly stable guarantee.
 
-=== Landscape review
+== Landscape review
 
 Given our understanding of the implementation of containers we can now take a look at some of the classic docker
 discussions.
 
-==== Systems Updates
+=== Systems Updates
 
 One of the oft overlooked parts of containers is the necessity to keep both them, and the host system up to date.
 
@@ -778,7 +780,7 @@ system. In this capacity they can do no self maintenance.
 Accordingly even if there are no updates to the software the container runs, containers should be periodically rebuilt
 and redeployed to the production system -- less they accumulate vunlerabilities over time.
 
-==== Init within contianer
+=== Init within contianer
 
 Given our understanding of containers its reasonable to consider the "1 process per container" advice and determine that
 it is an oversimplification of how containers work, and it makes sense in some cases to do service management within
@@ -800,7 +802,7 @@ log aggregation, restarting services or colocating services are taken care of by
 Accordingly its best to keep containers simple such that they are maximally composable and easy to debug, delegating
 the more complex behaviour out.
 
-=== In Conclusion
+== In Conclusion
 
 Containers are an excellent way to ship software to production systems. They solve a swathe of interesting problems
 and cost very little as a result. However, their rapid growth has meant some confusion in industry as to exactly
