@@ -69,9 +69,9 @@ blockquote {
     border: 0;
 }
 
-/* Callouts */
-
-.callout {
+/* Callouts & Adminoitions*/
+.callout,
+.admonitionblock {
     position: relative;
     margin-bottom: 1em;
     padding: 6px 12px;
@@ -81,7 +81,12 @@ blockquote {
     
 }
 
-.callout::before {
+.admonitionblock .icon {
+    display: none;
+}
+
+.callout::before,
+.admonitionblock::before {
     content: 'wb_sunny';
     color: #eef1f3;
     position: absolute;
@@ -115,11 +120,46 @@ blockquote {
     font-feature-settings: 'liga';
 }
 
-.callout--tip {
+.callout--tip,
+.tip {
     border-color: #5DB25E;
-    background-color: #e0f9e1;
+    background-color: #5DB25E36;
 }
 
-.callout--tip::before {
-    content: 'lightbulb_outline';
+.callout--tip::before,
+.tip::before {
+    content: 'lightbulb';
+}
+
+.callout--caution,
+.caution {
+    border-color: #ffc107;
+    background-color: #ffc10736;
+}
+
+.callout--caution::before,
+.caution::before {
+    content: 'warning';
+}
+
+.callout--note,
+.note {
+    border-color: #6bbfff;
+    background-color: #6bbfff36;
+}
+
+.callout--note::before,
+.note::before {
+    content: 'notifications';
+}
+
+.callout--warning,
+.warning {
+    border-color: #dc3545;
+    background-color: #dc354536;
+}
+
+.callout--warning::before,
+.warning::before {
+    content: 'error';
 }
