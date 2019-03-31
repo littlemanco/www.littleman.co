@@ -120,7 +120,17 @@ Virtualisation continued to dominate workload isolation until the company "dotcl
 a "platform as a service" (PAAS) offering, open sourced the software they used to run their PAAS. With that software and
 a large amount of luck containers proliferated rapidly until Docker became the power house it is now.
 
-// TOdo: Mention rkt, open container and so fourth.
+Shortly after Docker released their container runtime they started expanding their product offerings into build,
+orchestration and server management tooling^cite:[coreos.rocket]^. Unhappy with this CoreOS created their own container
+runtime, `rkt`, which had the stated goal of interoperating with existing services such as `systemd`, following
+https://en.wikipedia.org/wiki/Unix_philosophy[the unix philosophy] of "Write programs that do one thing and do it 
+well^cite:[catb.unix]^."
+
+To reconcile these disaparate definitions of a container the Open Container Initiative was 
+established^cite:[oci.registry]^, after which Docker donated its schema and its runtime as what amounted to a defacto
+container standard.
+
+There are now a number of container implementations, as well as a number of standards to define their behaviour.
 
 === Definition
 
