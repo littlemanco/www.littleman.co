@@ -16,8 +16,6 @@ contributors:
   - "Andrew Howden"
 --- 
 
-== What is a (Linux) container?
-  
 Containers have recently become a common way of packaging, deploying and running software across a wide set of machines
 in all sorts of environments. With the initial release of Docker in March, 2013^cite:[wikipedia.docker]^ containers have
 become ubiquitous in modern software deployment with 71% of Fortune 100 companies running it in some 
