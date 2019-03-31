@@ -16,7 +16,7 @@ name: "deploy"
 
 steps:
   - name: "hugo"
-    image: "quay.io/littlemanco/hugo:1.0.0"
+    image: "quay.io/littlemanco/hugo:2.0.0"
   - name: "container"
     image: "plugins/gcr"
     settings:
