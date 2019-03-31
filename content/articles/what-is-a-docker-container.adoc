@@ -173,18 +173,20 @@ standards are not yet clear enough.
 
 === Implementation
 
-// Todo: Mention "sandboxing"
-
 While the standards give us some idea as to what a container is and how they should work, it's perhaps useful to
 understand how a container implementation works. Not all container runtimes are implemented in this way; notably, 
-kata containers implement hardware virtualisation as alluded to earlier with EC2.
+kata containers implement hardware virtualisation as alluded to earlier with EC2. 
+
+The problems being solved by containers are:
+
+1. Isolation of a process(es)
+2. Distribution of that process(es)
+3. Connecting that process(es) to other machines
 
 With that said let's dive in to the Docker implementation^cite:[docker.overview]^. This uses a series of technologies
 exposed by the underlying kernel:
 
-==== Namespaces
-
-// Isolation: Kernel structures
+==== Kernel feature isolation: namespaces
 
 The `man namespaces` command defines namespaces as follows:
 
@@ -257,9 +259,7 @@ TIP: Process #1 or the `init` process in Linux systems has some additional respo
 TIP: Another place namespaces are used is the Chromium browser^cite:[chrome.sandboxing]^. Chromium uses at least the 
      `setuid` and `user` namespaces.
 
-==== Control Groups
-
-// Isolation: System resources
+==== Resource isolation: control groups
 
 The kernel documentation for `cgroups` defines the cgroup as follows:
 
@@ -307,7 +307,7 @@ TIP: Although `cgroups` are most commonly associated with containers they're alr
      example is perhaps `systemd`, which automatically puts all services into a `cgroup` if the CPU scheduler is
      enabled in the kernel^cite:[0pointer.resources]^. `systemd` services are ... kind of containers!
 
-==== Seccomp
+==== Userland isolation: seccomp
 
 While both namespaces and `cgroups` go a significant way to isolating processes into their own containers Docker goes
 further than that to restrict what access the process can have to the Linux kernel itself. This is enforced in supported
@@ -368,7 +368,7 @@ choice to a competent third party provider.
 Additionally it's worth noting that even though Docker defaults to enabling the `seccomp` policy, orchestration
 systems such as `kubernetes` may disable it^cite:[kubernetes.pod-security-policy]^.
 
-==== Union File System
+==== Distribution: the union file system
 
 To generate a container Docker requires a set of "build instructions". A trivial image could be:
 
@@ -536,11 +536,7 @@ TIP: Generally speaking all software needs access to shared libraries found in s
      such that users can install and applications can find the libraries they expect. However, it is possible to use
      an empty filesystem and a statically compiled binary with the `scratch` image type.
 
-==== Networking
-
-While a lot of the value in containers in the building, shipping and execution of code in a consistent way across
-different infrastructure fairly safely another significant value proposition is the way containers handle networking and
-service discovery.
+==== Connectivity: networking
 
 As mentioned earlier, containers make use of Linux namespaces. Of particular interest when understanding container
 networking is the network namespace. This namespace gives the process separate:
