@@ -1,7 +1,7 @@
 ---
 categories:
   - "Deep Dive"
-date: 2018-03-27
+date: 2019-03-27
 description: "What is a container and how do they work"
 slug: "what-is-a-container"
 tags:
