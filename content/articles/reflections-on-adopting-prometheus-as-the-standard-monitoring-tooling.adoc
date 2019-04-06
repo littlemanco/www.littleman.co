@@ -35,11 +35,22 @@ event aggregation.
 
 === Time series data as the common diagnostic language
 
-Each of the different methods of introspecting an application have their strengths and their weaknesses. Logs provide a
-superb level of detail, but are difficult to parse. Traces are an excellent summary of a path through the stack, as well
-as the latency in different components, but are expensive to setup, and are not yet part of the lexicon of the team 
-here. Event aggregation requires a structured approach to exporting information that must be retrofitted to all
-applications. Which leaves, time series data.
+Each of the different methods of introspecting an application have their strengths and their weaknesses:
+
+[cols="2,15"]
+|===
+| Technique           | Tradeoffs
+
+| Logs                | Provide a superb level of detail, but are difficult to parse. Good for debugging a specific 
+                        issue but near impossible to use to spot patterns over time.
+| Transaction Tracing | Provide an excellent summary of the path through the stack and latency or issues associated
+                        with a given request but require a large amount of investment to setup and are not in common
+                        use yet.
+| Event Aggregation   | Events can be aggregated and sliced more easily, but require a structured approach to logging
+                        that must be retrofitted across all applications
+|===
+
+That leaves "time series data".
 
 Time series data is the collection of a numeric representation of the state of an application over time. A trivial 
 example is the number of HTTP requests that results in a 500 status code:
@@ -65,12 +76,12 @@ against other strange anomalies in the infrastructure, such as CPU load or netwo
 There are quite a few tools that make it easy to capture and store time series
 data:
 
-* Statsd
-* Datadog
-* NewRelic
-* Sensu
-* Munin
-* ElasticSearch
+* https://github.com/statsd/statsd[Statsd]
+* https://www.datadoghq.com/[Datadog]
+* https://newrelic.com/[NewRelic]
+* https://sensu.io/[Sensu]
+* http://munin-monitoring.org/[Munin]
+* https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-overview.html[ElasticSearch]
 
 Each have their own tradeoffs.
 
