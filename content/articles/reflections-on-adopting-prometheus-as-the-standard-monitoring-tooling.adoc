@@ -1,0 +1,147 @@
+---
+categories:
+- "Case Study"
+date: 2018-03-18
+description: "Lessons from deploying Prometheus as the canonical time series data tool across an organisation"
+tags:
+  - "observability"
+  - "prometheus"
+  - "time series data"
+title: "Reflections on adopting Prometheus as the standard time series data tooling"
+github-issue: 10
+contributors:
+  - "Andrew Howden"
+---
+
+= Reflections on adopting Prometheus as the standard time series data tooling
+
+The tool https://prometheus.io/[Prometheus] has been in use within the organisation for approximately 12 months 
+now, with a growing responsibility that now includes determining the health of all of our physical systems, whether 
+systems are “up” to the public and a detailed analysis of software on a subset of those systems. It seems reasonable now
+to be retrospective, and evaluate the strengths and the weaknesses of the tool as I have used it.
+
+== The problem
+
+Broadly, the problem that we were trying to solve with Prometheus is to get insight into how well our applications were
+ performing in a production environment. Specifically:
+
+* Is the software doing what it is supposed to?
+* If not, why not?
+
+== Many possible solutions
+
+There are many different approaches to attempting to answer those question, including logs, traces, time series data or
+event aggregation.
+
+=== Time series data as the common diagnostic language
+
+Each of the different methods of introspecting an application have their strengths and their weaknesses. Logs provide a
+superb level of detail, but are difficult to parse. Traces are an excellent summary of a path through the stack, as well
+as the latency in different components, but are expensive to setup, and are not yet part of the lexicon of the team 
+here. Event aggregation requires a structured approach to exporting information that must be retrofitted to all
+applications. Which leaves, time series data.
+
+Time series data is the collection of a numeric representation of the state of an application over time. A trivial 
+example is the number of HTTP requests that results in a 500 status code:
+
+|===
+| Time collected | Total 500s
+
+| 00:00:00       | 0
+| 00:00:15       | 0
+| 00:00:30       | 2
+| 00:00:45       | 5
+|===
+
+In the example above there was a total of 5 500’s; 2 of which happened between 15 seconds and 30 seconds, and 3 of which
+happened between 30 seconds and 45 seconds.
+
+Time series data is excellent to work with as so much information can be derived from such a simple export. We can 
+determine rate, total number, issue times and by comparing it against other time series we can correlate this issue 
+against other strange anomalies in the infrastructure, such as CPU load or network throughput.
+
+=== The many tools that adhere to this model
+
+There are quite a few tools that make it easy to capture and store time series
+data:
+
+* Statsd
+* Datadog
+* NewRelic
+* Sensu
+* Munin
+* ElasticSearch
+
+Each have their own tradeoffs.
+
+=== Settling on Prometheus
+
+In the past, I have used Sensu, New Relic and Prometheus. I have also used ElasticSearch for log aggregation, but that’s
+a story for another day.
+
+Prometheus has a number of characteristics that, for me, mean it’s superior as a monitoring tool:
+
+* **Totally Free**: Owned by the CNCF Prometheus is “Free as in beer”. In the past as an agency we have been bitten by
+  being priced out of other services (looking at you, New Relic!)
+* **Bizarrely Simple**:** **Prometheus is written in Go, and is extremely simple to get up and running. It’s packaged in
+   Debian 9, or one can simply pick it up from GitHub and drop it in `/usr/local/bin/` . Such simplicity is attractive
+   when playing around with it.
+* **Reliable**: To make Prometheus highly available, you simply add another Prometheus. These’s no consensus or other
+  fuckery; it simply scans all metrics 2x. To scale it, you add another Prometheus which collects and aggregates some
+  metrics, then you point your first Prometheus at that Prometheus and collect only the aggregated data.
+* **Opinionated: **Prometheus makes certain assumptions about how the data should be exported, and doesn’t forgive 
+  violations of those assumptions easily. Though (like seemingly all new tech) initially it felt un-intuitive, the 
+  consistency and assumptions of this approach are super nice.
+* **Alerts**: Prometheus integrations with another free tool called “Alertmanager”, also from the authors of Prometheus.
+  This functions as a reliable alerting tool, integrating with many of the standard alerting mechanisms (pushover being 
+  my favorite), and easily extended to more.
+* **Standard format for metrics**: Prometheus collects metrics by making a GET HTTP request, and expecting a simple, 
+  easy to understand text format back. This is nice because applications can support Prometheus easily (there are a 
+  host of libraries to do the minimal work required), and it’s extremely easy to instrument other applications that 
+  currently do not support time series data.
+
+== Lessons
+
+The road to adoption has definitely not been super simple, however. There have been issues with the adoption of this 
+tool that have only had resolutions with time and considered thought.
+
+=== A complex, difficult to understand tool
+
+In an insightful moment, a colleague said to me “This feels like the MySQL console! It’s a magic language without help”.
+This is an astute comparison; In order to use Prometheus effectively, users must learn this language, including it’s 
+arcane rules about `rate` , comparison between metrics etc.
+
+Prometheus integrates with the graphing tool “Grafana”. The best solution to make Prometheus more accessible was to 
+install Grafana, and a swathe of dashboards for the available metrics. These dashboards are all freely available,
+and with minimal configuration, can provide much more insight into the metrics for non-specialists.
+
+=== Self hosting can be hard
+
+The standard joke with monitoring is “What’s monitoring the monitoring?” It reaches beyond the immediate question, and
+into how to ensure that monitoring is architected for reliability.
+
+We have had just the once incident over the last 12 months where Prometheus became unavailable. It turns out that as 
+you increase the responsibility, it’s disk space requirements also increase (shock, I know). At some point, it filled
+the disk and corrupted data, then failed to boot. Though annoying, our meta-monitoring picked it up, and it was readjusted.
+
+Practically, if you’re running Kubernetes I recommend installing the excellent `stable/prometheus` chart from Helm onto
+your cluster. It might be there already, it’s become the defacto monitoring tool for Kubernetes. If you’re not
+using Kubernetes, then … consult your sysadmin.
+
+== Moving Forward
+
+I hope to see Prometheus grow an even larger role within our Organisation. Further, as we improve our infrastructure
+architectures I think it will prove progressively more useful.
+
+I think we need to further instrument our software to take advantage of exporting data (such as Magento 2), which will
+let us get even better insight into our applications.
+
+Additionally, I would consider moving to a hosted model of Prometheus to make it more accessible to members of the team
+who area not familiar with the helm deployment model. However, I think perhaps the it’s not worth the tradeoffs just
+yet.
+
+== In Summary
+
+Prometheus has become our defacto time series collection and monitoring tool. In combined with Grafana, it is an 
+accessible tool to help developers inspect their applications or infrastructure in a production environment. I’m quite 
+sure it’s not the only tool capable of doing the job, or perhaps even the best — but I’ve enjoyed it.
