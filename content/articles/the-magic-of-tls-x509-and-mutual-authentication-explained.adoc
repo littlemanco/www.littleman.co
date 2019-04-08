@@ -1,0 +1,176 @@
+---
+categories:
+- "Deep Dive"
+date: 2018-07-26
+description: "The problems securing and verifying user and server identity, and how TLS and the X.509 specification address them."
+tags:
+  - "TLS"
+  - "X.509"
+  - "Security"
+  - Encryption
+title: "The magic of TLS, X.509 and mutual authentication explained"
+github-issue: 10
+contributors:
+  - "Andrew Howden"
+---
+
+Recently I had to set up mutual TLS authentication between a MySQL server and a replica which gave me the first 
+chance to really dive into setting up and running a CA, and implementing mutual authentication. It was a cool learning 
+experience, and I’d like to recap and expand on some of the learning I had. 
+
+NOTE: This isn't a 100% accurate reflection of the specification. Rather, it's simplified in some places to build some
+      mental model that helps us understand how TLS works. Where terms are mentioned there are links that can be used
+      to find a more exact meanining.
+
+== The problem of data safety
+
+Computers communicate by sending messages to one another. In this case computer "Alice" would like to send a message
+that instructs the computer "Bob" how to display a website. It's easy to think that Alice talks directly to Bob:
+
+image:/images/the-magic-of-tls-and-x509-explained/alice-sends-bob-the-website.png[Alice talking directly to bob]
+
+However, generally speaking Alice and Bob do not talk this way. Rather their conversation is mediated by other
+computers. These computers are usually termed "routers" or "firewalls" or any other appliance like name but they are
+nonetheless just another type of computer. These intermediary computers mediate things like allowing Alice, Bob and
+Paul to use the same phone line or connecting Alice and Bob with their colleagues in the next city. Computers generally
+look more like:
+
+image:/images/the-magic-of-tls-and-x509-explained/alice-sends-bob-the-website-via-intermediaries.png[Alice talking to Bob via intermediaries]
+
+This presents Alice and Bob with several problems:
+
+1. Alice and Bob cannot be sure that the intermediary computers have not recorded their discussions.
+2. When Alice sends a message to Bob and receives a reply, she cannot be sure that Bob is the one who sent the reply --
+   not one of the intermediary computers.
+3. Alice can't be sure that what Bob says has not been modified en route.
+
+Luckily, there is a mechanism to solve this exact problem.
+
+== Transport Layer Security
+
+Transport Layer Security (TLS) and its predecessor Secure Sockets Layer (SSL) have existed since since 
+1996^cite:[rfc.6101]^ to solve this problem. As mentioned there are two types of problem that need to be solved:
+
+=== Ensuring data is not readable by intermediaries
+
+In order to ensure that data is not read by the computers that sit between a network connection the data is encrypted.
+Encryption is defined as ^cite:[wikipedia.encryption]^:
+
+[quote,Wikipedia]
+The process of encoding a message such that only those who should be able to read and understand it can read and 
+understand it.
+
+In order to discuss things privately Alice needs to encode the message in some way that Bob can decode and understand
+it. Unfortunately this is a chicken and egg problem:
+
+1. Alice needs to tell Bob how she will encode the data, but
+2. Anything Alice says will be picked up by the intermediaries, so
+3. The intermediaries can also decode the data!
+
+The solution lies in a process called "public key" or "asymmetric" cryptography.
+
+Without going too deep into https://en.wikipedia.org/wiki/RSA_(cryptosystem)#Encryption[how this works] we need to know
+that Bob already has an the key for an encoding that will allow him to decode secret messages from Alice. Bobs encoding
+is split into two pieces:
+
+* A “public” key, which contains the reference to encode the data, and
+* A “private” key, which contains the reference to decode the data
+
+This means Bob can share the "public" half of his key to any who would ask for it. Any information that is encoded with
+his public key can only be decrypted with his private key; the key that only Bob has. This allows anyone who knows
+Bob to send Bob secret information!
+
+TIP: This pattern is widely employed in a variety of technical systems. Popular implementations include the Pretty
+     Good Privacy (PGP) and Secure Shell (SSH) protocols.
+
+So, to start a secret conversation Alice needs to ask for Bob's Public key:
+
+image:/images/the-magic-of-tls-and-x509-explained/alice-asks-bob-for-public-key.png[Alice asks Bob for his public key]
+
+This allows Alice to send secret messages to Bob. However, there is a weakness: Bob cannot send secret messages back
+to Alice! In order to send a secret message back to Alice, Bob needs a key that only Alice will understand.
+
+Alice knows that she can send information to Bob that only Bob can read. She can take advantage of this to send Bob some
+secret information that describes how both she and Bob can encode secret information back and fourth to each other.
+
+This 1 way secrecy allows the creation of a "symmetric" key. As opposed to our asymmetric key from earlier, both Alice
+and Bob can encode information against the same key. While this key was shared between Alice and Bob, they are the only
+ones that should know it as it was passed encoded by alice and sent to Bob via asymmetric encryption.
+
+This creates the two way, secret connection:
+
+image:/images/the-magic-of-tls-and-x509-explained/alice-and-bob-talk-secretly.png[Alice and Bob talk secretly]
+
+At the end of this process Alice and Bob can both send secret information to each other all day long without worrying
+about whether anyone is recording their connection. It doesn't matter -- only Alice and Bob are able to understand the
+conversation but any intermediary can hear only gibberish.
+
+However, there is still a flaw: How does Alice know Bob is Bob?
+
+=== Ensuring Bob is Bob
+
+In the examples described, we know that Alice is talked to Bob through a network of computers. However, what happens
+if one of those computers suddenly starts pretending to be Bob?
+
+image:/images/the-magic-of-tls-and-x509-explained/alice-thinks-she-is-talking-to-bob.png[Alice thinks she is talking to Bob]
+
+Without knowing Bob beforehand, it’s impossible for Alice to know “Bob” is “Bob”. Alice will simply start an encrypted 
+connection with whomever pretends to be Bob. Indeed, although it’s not shown here, the intermediary can pretend to be
+Bob to Alice, and Alice to Bob! This is termed a “Man in the middle attack”.
+
+However, there is a part of the TLS standard that is also designed to solve this problem. Specifically, when Alice first
+indicates to Bob that she’d like to start talking over an encoded connection she not only asks for his public key
+but also for him to provide a https://en.wikipedia.org/wiki/X.509[certificate] (in the form of X.509) proving who he is.
+She then asks a set of trusted advisers called “certificate authorities” whether Bob seems legit, and decides whether to
+proceed based on what those authorities have to say.
+
+image:/images/the-magic-of-tls-and-x509-explained/alice-verifies-bob-is-bob.png[Alice verifies Bob is Bob]
+
+Where a certificate is not vouched for by an authority, Alice will simply reject the connection.
+
+image:/images/the-magic-of-tls-and-x509-explained/alice-verifies-bob-is-not-bob.png[Alice verifies Bob is not Bob]
+
+=== Ensuring Alice is Alice
+
+For Alice, the connection is now happy and fairly secure. She knows the Bob she’s talking to is the real Bob, and that
+only she and Bob can see the messages being exchanged. However, Bob has no such assurance that Alice is Alice.
+
+There are two sides to each connection:
+
+* The “Client”. In this case, that’s Alice — she sends the first message.
+* The “Server”. In this case, that’s Bob — he responds to (or “serves”) the messages.
+
+Verifying Bob is Bob is an extremely common operation. Indeed, while viewing this post it’s extremely likely your 
+browser verified that the blog website you see before you is the blog website it claims to be. Verifying Alice is 
+actually Alice is a much less common operation, but is generally called 
+“https://en.wikipedia.org/wiki/Mutual_authentication[Mutual TLS authentication]” as both Alice and Bob are verified.
+
+Consider the scenario in which Bob is expecting some sensitive, perhaps medical or similar data from Alice. Bob will 
+then process that data and then make a diagnosis about Alice condition. In this case, Bob definitely wants to be sure
+that Alice is the real Alice, and is not making up fake diagnostic data!
+
+Luckily, the aforementioned TLS standard can be easily extended to include the same verification process for Alice as 
+for Bob:
+
+image:/images/the-magic-of-tls-and-x509-explained/bob-verifies-alice-is-alice.png[Bob verifies Alice is Alice]
+
+Now that both Alice and Bob both have strong guarantees that they are who they say they are (vouched for by their 
+certificate authorities) and the connection is encrypted this connection can be said to be very secure.
+
+== In Conclusion
+
+Transport Layer Security (TLS) and the X.509 certificate can seem when first encountered like essentially magical things
+that somehow provide security but it’s not clear exactly how or why. After implementing them a couple of times and
+going through the required debugging to get everything talking correctly to each other it becomes a simpler task. 
+Hopefully this post has gone some way to making that debugging process eventually easier.
+
+=== Thanks
+
+* https://medium.com/@ddavidn[Daniel Nettleton] for their early review and feedback
+* https://medium.com/@tkaplonski[Tomasz Kapłoński] for their early review and   feedback
+* Antonius Koch for their early review
+* Vinai Kopp for review
+
+=== References
+
+bibliography::[]
