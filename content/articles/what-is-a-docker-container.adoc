@@ -607,7 +607,7 @@ network and either have an IP assigned to it via the cloud provider or, in the c
 request an IP via DHCP. However our container is in a network namespace of its own and has no knowledge of the ethernet
 connected to the host. To connect the container to the host we need to employ a `veth` device.
 
-`veth`, or "Virtual Ethernet Device" is defined by `man vetTo create a `veth` device we can run as:
+`veth`, or "Virtual Ethernet Device" is defined by `man vet` as:
 
 > The veth devices are virtual Ethernet devices. They can act as tunnels between network namespaces to create a
 > bridge to a physical network device in another namespace, but can also be used as standalone network devices.
