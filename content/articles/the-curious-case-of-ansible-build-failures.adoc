@@ -1,0 +1,51 @@
+---
+categories:
+  - "Case Study"
+date: 2018-07-06
+description: "Changing Ansible versions in the pipeline break for no apparent reason"
+tags:
+  - "Ansible"
+  - "Debugging"
+title: "The curious case of sudden Ansible build failures"
+github-issue: 10
+contributors:
+  - "Andrew Howden"
+---
+
+== The curious case of sudden Ansible build failures
+
+So, I arrived a little earlier to work today to get some work done. First step: Set up a machine for QA. Luckily, we’ve 
+done lots of work to make this a trivial exercise, it’s a push button operation! Except:
+
+image:/images/the-curious-case-of-ansible-build-failures/error-badge.png[A badge showing a failed build]
+
+Boom. Failure. Now, the change I’d made to deploy this testing machine was
+beyond innocuous, and should definitely not result in the failure that I saw.
+
+Several annoyed and confused minutes later, I discover this cherry:
+
+[source,bash]
+----
+[WARNING] Ansible is in a world writable directory (/opt/atlassian/pipelines/agent/build), ignoring it as an source.
+----
+
+What. Suddenly configuration was being ignored?
+
+Balls. Backing up a step, we keep our build container suuuuper up to date. It looks like Ansible released a new version
+this morning. Buried in that was this lovely PR:
+
+- https://github.com/ansible/ansible/pull/42142/files[stable-2.5: ignore ansible.cfg in world writable cwd (#42070) #42142]
+
+No more configuration for world writable directories. Now, this makes quite some sense; what doesn’t make sense is why 
+the directory would be world writable for BitBucket Pipelines?! But whatever. A quick and dirty:
+
+[source,bash]
+----
+# Correct the permissions on the build environment directory.
+# See https://github.com/ansible/ansible/pull/42142/files
+chmod 700 /opt/atlassian/pipelines/agent/build
+----
+
+in the build script, and we’re in our way.
+
+Back to the rest of Friday morning, then.
