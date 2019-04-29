@@ -69,6 +69,11 @@ blockquote {
     border: 0;
 }
 
+.paragraph .image {
+    display: block;
+    text-align: center;
+}
+
 /* Callouts & Adminoitions*/
 .callout,
 .admonitionblock {
