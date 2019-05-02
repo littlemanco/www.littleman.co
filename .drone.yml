@@ -1,0 +1,8 @@
+---
+kind: "pipeline"
+name: "lint"
+steps:
+  - name: "lint"
+    image: "debian:stretch"
+    commands:
+      - robo lint
