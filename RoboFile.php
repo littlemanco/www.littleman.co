@@ -16,7 +16,7 @@ class RoboFile extends \Robo\Tasks
      */
     public function lint()
     {
-        $this->taskExecStack()
+        return $this->taskExecStack()
             ->stopOnFail()
             ->exec('yamllint .')
             ->run();
@@ -54,6 +54,5 @@ class RoboFile extends \Robo\Tasks
         $this->taskExec('docker')
             ->args(['push', $containerName . ':latest'])
             ->run();
-           
     }
 }
