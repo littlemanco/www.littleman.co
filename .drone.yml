@@ -3,6 +3,6 @@ kind: "pipeline"
 name: "lint"
 steps:
   - name: "lint"
-    image: "debian:stretch"
+    image: "gcr.io/littleman-co/www-littleman-co--build:fe2e8b1"
     commands:
-      - robo lint
+      - /usr/local/bin/robo lint
