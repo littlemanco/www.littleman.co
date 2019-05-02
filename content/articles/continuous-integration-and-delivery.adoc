@@ -248,7 +248,7 @@ TIP: Practically there can be some setup required to authorize services and do o
      At the time of writing it looks like this is only possible with the use of
      http://plugins.drone.io/[DroneCIs plugin system].
 
-== Writing steps
+== Writing the task
   
 As discussed, the pipeline consists of a set of steps that need to be executed prior to verifying the codebase is still
 correct or deploying the software to some environment. Further, these steps should be executable both on the local
@@ -362,6 +362,159 @@ Available commands:
 However, they should all work and be useful locally before they're consumed in the pipeline.
 
 == Designing the pipeline
+
+=== Choosing a build tool
+
+There are many different CI/CD tools that are available, both implemented as open source and commercially supported.
+However, some tools are better than others. To me, the most important characteristics are:
+
+1. Driven by version control
+2. Simple & Clear
+3. Docker based
+4. Well integrated into project management tooling
+5. Capable of building a "Directed acyclic graph" (DAG)
+
+There are several tools that match this criteria, including:
+
+1. Drone CI
+2. Circle CI
+3. BitBucket Pipelines
+4. GitLab Pipelines
+
+There are likely many more. However, for the purpose of this tutorial we'll be adopting Drone CI.
+
+=== Writing the job
+
+Most tools specify build configuration with a file or folder in the project root, and Drone is no exception with its
+`drone.yml` specification.
+
+A minimal configuration that lints every time the code is pushed to the upstream server would look like:
+
+[source,bash]
+----
+$ cat <<EOF > .drone.yml
+---
+kind: "pipeline"
+name: "lint"
+steps:
+  - name: "lint"
+    image: "debian:stretch"
+    commands:
+      - robo lint
+EOF
+----
+
+Committing and pushing it should trigger the build:
+
+[source,bash]
+----
+# git add RoboFile.php .drone.yml
+$ git commit -m "Create an initial build configuration"
+$ git push origin ad-hoc-ci-cd-demo
+----
+
+Unfortunately this by itself does not work:
+
+image:/images/continuous-integration-and-delivery/failing-build-robo-not-found.png[A build failure due to the missing "robo" binary]
+
+There are two possible solutions to this:
+
+1. Install the tools in the pipeline
+2. Create a container that includes the build tools
+
+Of these options. #2 is far better. It allows much faster builds, prevents flaky builds due to software upstreams being
+down or the network being flaky and fixes the build software to a "known" version.
+
+Often, there are pre made images that are suitable for our purpose. However, unless the heritage of that image is
+trusted its better to simply write one. If the build task is simple and it's possible to write an image that does
+a single thing it's reasonable to publish the image. However, more likely the build will require some custom tools
+not regularly bundled together.
+
+An example would be:
+
+[source,dockerfile]
+----
+FROM debian:stretch
+
+# Some system upgrades
+RUN apt-get update && \
+    apt-get dist-upgrade --yes
+
+RUN apt-get install --yes \
+    # "Basic" tools 
+    curl \
+    python python-pip \
+    # Task runner runtime
+    php && \
+    # Linting Tools
+    pip install \
+        yamllint
+
+# Install the task runer
+RUN curl -O https://robo.li/robo.phar && \
+    chmod +x ./robo.phar && \
+    mv ./robo.phar /usr/local/bin/robo
+----
+
+The logic to build (and push) this new Dockerfile can be embedded in the same task runner:
+
+[source,php]
+----
+
+    /**
+     * Builds containers. Available containers are those at the path "build/containers"
+     *
+     * @option container The container to build
+     */
+    public function containerBuild($opts = ['container' => 'web'])
+    {
+        $refspec       = exec('git rev-parse --short HEAD');
+        $containerName = self::CONTAINER_NAMESPACE . '--' . $opts['container'];
+
+        $this->taskDockerBuild(self::CONTAINER_PATH . DIRECTORY_SEPARATOR . $opts['container'])
+            ->tag($containerName . ':' . $refspec)
+            ->tag($containerName . ':latest' )
+            ->run();
+    }
+
+    public function containerPush($opts = ['container' => 'web'])
+    {
+      // Omitted for brevity
+    }
+----
+
+Once the image has been pushed to the repository we can consume it in our build configuration:
+
+[source,yaml]
+----
+---
+kind: "pipeline"
+name: "lint"
+steps:
+  - name: "lint"
+    image: "gcr.io/littleman-co/www-littleman-co--build:fe2e8b1"
+    commands:
+      - /usr/local/bin/robo lint
+----
+
+And the build should work as expected:
+
+image:/images/continuous-integration-and-delivery/successful-build-robo-found.png[A successful build after robo is installed]
+
+This repeats for however many tasks the build should consist of; lints, tests and eventually even the deployment.
+
+TIP: In this case a private image is used but authentication is delegated to the build farm directly, rather than
+     specified in the build configuration. Practically Drone runs on top of GKE.
+
+TIP: Like other docker images, it's good to keep the build containers small and suited for the task. The build container
+     need not be the deploy container, nor the analysis container and so on. Such reducing of responsibility helps
+     prevent unintended dependencies on the state or applications of other containers.
+
+=== Building the pipeline
+
+- Triggers
+- Deployments
+- Etc
 
 // Todo: Writing spec, designing build environments, doing the DAG.
 
