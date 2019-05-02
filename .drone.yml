@@ -3,6 +3,6 @@ kind: "pipeline"
 name: "lint"
 steps:
   - name: "lint"
-    image: "gcr.io/littleman-co/www-littleman-co--build:fe2e8b1"
+    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
     commands:
       - /usr/local/bin/robo lint
