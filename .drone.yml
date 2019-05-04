@@ -70,6 +70,8 @@ name: "container"
 steps:
   - name: "container"
     image: "gcr.io/littleman-co/www-littleman-co--build:d7c8edd"
+    # Required to build container
+    privileged: true
     commands:
       - /usr/local/bin/robo application:compile
       - /usr/local/bin/robo container:build --container=web
