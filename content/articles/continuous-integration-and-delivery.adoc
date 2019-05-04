@@ -10,7 +10,6 @@ tags:
   - "Release Management"
 title: "On continuous integration and delivery"
 github-issue: 37
-draft: true
 contributors:
   - "Andrew Howden"
 ---
@@ -638,88 +637,119 @@ Implementing the deployment task is exactly the same process, varying only in th
 case for production is being able to manually gate builds based on some human intervention. In the case of Drone
 this is termed "Promotion". Given configuration that looks like:
 
+[source,yaml]
+----
+---
+kind: "pipeline"
+name: "container"
+steps:
+  - name: "container"
+    image: "gcr.io/littleman-co/www-littleman-co--build:d7c8edd"
+    environment:
+      GOOGLE_SERVICE_ACCOUNT:
+        from_secret: GOOGLE_SERVICE_ACCOUNT
+    # Required to build container
+    privileged: true
+    commands:
+      # Enable img to push to docker registry
+      - img login -u _json_key -p "$GOOGLE_SERVICE_ACCOUNT" https://gcr.io
+      - /usr/local/bin/robo application:compile
+      - /usr/local/bin/robo container:build --container=web
+      - /usr/local/bin/robo container:push --container=web
 
+trigger:
+  branch:
+    - master
+  event:
+    - push
+---
+kind: "pipeline"
+name: "canary"
+steps:
+  - name: "canary"
+    image: "gcr.io/littleman-co/www-littleman-co--build:d7c8edd"
+    commands:
+      - /usr/local/bin/robo deploy --environment=canary
+trigger:
+  branch:
+    - master
+  event:
+    - push
+depends_on:
+  - container
+---
+kind: "pipeline"
+name: "production"
+steps:
+  - name: "deploy"
+    image: "gcr.io/littleman-co/www-littleman-co--build:d7c8edd"
+    commands:
+      - /usr/local/bin/robo deploy --environment=production
+trigger:
+  event:
+    - promote
+  target:
+    - production
+  branch:
+    - master
+---
+kind: "pipeline"
+name: "rollback"
+steps:
+  - name: "rollback"
+    image: "gcr.io/littleman-co/www-littleman-co--build:d7c8edd"
+    commands:
+      - /usr/local/bin/robo rollback --environment=production
+trigger:
+  event:
+    - rollback
+  target:
+    - production
+  branch:
+    - master
+----
+
+We achieve a "two step" deployment process:
+
+image:/images/continuous-integration-and-delivery/build-flow-with-promotion.png[A two step build, with promotion]
+
+Where step 1 is executed automatically on anything being added to the master branch, whereas step two requires a human
+to "promote" the build. At the time of writing 
+https://github.com/drone/drone-ui/issues/171[it is only possible to trigger the promotion via the CLI]:
+
+[source,yaml]
+----
+drone build promote littlemanco/www.littleman.co 100 production
+----
+
+Where:
+
+- `littlemanco/www.littleman.co` is the repository
+- `100` is the build number
+- `production` is the intended environment
 
 TIP: Our configuration is getting very long and repetitive at this point. Drone has some support for jsonnet as a
      configuration language to help remedy this, or jsonnet can be expressed to yaml prior to the build execution
      and committed.
 
-// Another post
-// Deployment: Another post
+CAUTION: In the build configuration above there is a "rollback" step. At the time of writing this
+         https://github.com/drone/drone/issues/2695[appears to be broken].
 
-// === Enforcing pipeline use
+== In Conclusion
 
-// - GitHub allows preventing push to branch
-// - IT also allows preventing merge until build passes
+Continuous integration & delivery has become a fairly essential part of software development. It augments the software
+delivery life cycle with additional correctness checking to find bugs earlier and dramatically reduces the cost and
+risk associated with pushing changes to production. There are many CI/CD servers however Drone implements all required
+features for the vast majority of software projects and is open source and trivially installable. With Drone we 
+constructed a multi-step build cycle stubbing out lints, tests and other correctness checks common software, as well
+as stubbed out a workflow for continuous delivery.
 
-// WARNING: Requires "break glass" procedure for pushing changes to production in a hurry. Practically on GitHUb this
-//          means administrators can skip protections
+That's it! This post got a bit long, and I did not get to cover all of the things I would like to. However if you made
+it this far and you enjoyed it be sure to 
+https://github.com/littlemanco/www.littleman.co/issues[voice yourself on GitHub], and I'll keep writing this stuff up.
 
-// - Triggers
-// - Deployments
-// - Etc
+<3
 
-// // Todo: Writing spec, designing build environments, doing the DAG.
+== References  
 
-// // DAG
-// // Simple examples
-// // Embedding in pipeline
-// // ETC
-// // Todo: Talk aobut how Docker has made it easy to be specific about environments, and made them cheap
-// // Still thinking about this
-// // Todo: Gitops
-
-
-
-
-
-// === Responsibilities
-
-// 1. Lint
-// 2. Test
-// 3. Smoke test
-// 4. Deploy (using external tooling)
-// 5. Roll back
-
-// === Writing the jobs
-
-// == CI staying successful
-
-// (From Martin Fowler):
-// - Maintain a Single Source Repository.
-// - Automate the Build
-// - Make Your Build Self-Testing
-// - Everyone Commits To the Mainline Every Day
-// - Every Commit Should Build the Mainline on an Integration Machine
-// - Fix Broken Builds Immediately
-// - Keep the Build Fast
-// - Test in a Clone of the Production Environment
-// - Make it Easy for Anyone to Get the Latest Executable
-// - Everyone can see what's happening
-// -- Read: This means it's a communication tools
-// - Automate Deployment
-
-// (Mine)
-// - Integrated into existing tooling (GitHub, PRs)
-// - Simple & Clear
-// - Fast!
-// -- Needs to be so if there are emergencies it can be rolled out quickly
-// -- Parallel; DAG.
-// - Reliable!!
-// - Handles the deployment as a result of the checks
-// - Can be promoted
-// - Generally speaking, all in the same repository save specifically vendored libraries.
-// - Build environents in VCS also
-// - Singel pipeline (keif morris)
-
-// Anti Features
-// - Controlling which environment to deploy to
-// - Holding back specific deployments
-// - Allowing environment specific configuration
-// - Introducing new stuff to the build that breaks it will also break confidence, or if it break sand nothing bad happens,
-//   hit alert fatigue. The build must remain on average green; if it's going red all the time, either the development
-//   practice is fundamentally broken and must be addressed or the build is.
-
-// == References  
-
-// bibliography::[]
+bibliography::[]
