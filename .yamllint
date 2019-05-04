@@ -1,0 +1,11 @@
+---
+extends: default
+
+ignore: |
+  deploy/helm
+
+rules:
+  line-length:
+    max: 120
+  braces:
+    max-spaces-inside: 1

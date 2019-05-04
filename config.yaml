@@ -1,3 +1,4 @@
+---
 baseURL: https://www.littleman.co
 languageCode: en-us
 title: littleman.co
@@ -20,15 +21,15 @@ permalinks:
 
 menu:
   nav:
-  - name: Home
-    url: /
-    weight: 1
-  - name: Articles
-    url: /articles/
-    weight: 2
-  - name: "Docs"
-    url: "/documentation"
-    weight: 3
+    - name: Home
+      url: /
+      weight: 1
+    - name: Articles
+      url: /articles/
+      weight: 2
+    - name: "Docs"
+      url: "/documentation"
+      weight: 3
 
 params:
   includeBootstrapJs: false
@@ -42,8 +43,8 @@ params:
 
     [support@littleman.co](support@littleman.co?subject=Request%20for%20further%20information)
 
-    From there we can discuss whether we can help. Try and be as detailed as you can; to preserve our concentration and try
-    and be as efficient as possible we generally only check email 1x per 24 hour period.
+    From there we can discuss whether we can help. Try and be as detailed as you can; to preserve our concentration and
+    try and be as efficient as possible we generally only check email 1x per 24 hour period.
 
     [Objectives (2019)](/objectives-and-key-results/)
   footerText: |

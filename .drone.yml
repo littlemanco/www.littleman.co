@@ -1,48 +1,124 @@
 ---
 kind: "pipeline"
-name: "web"
+name: "lint"
 steps:
-  - name: "hugo"
-    image: "quay.io/littlemanco/hugo:2.0.1"
+  - name: "lint"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
+    commands:
+      - /usr/local/bin/robo lint
 
 trigger:
-  branch:
-    - "master"
+  # Execute this process every time a new pull request is opened
   event:
-    - "pull_request"
+    - pull_request
 ---
 kind: "pipeline"
-name: "deploy"
-
+name: "unit-test"
 steps:
-  - name: "hugo"
-    image: "quay.io/littlemanco/hugo:2.0.1"
-  - name: "container"
-    image: "plugins/gcr"
-    settings:
-      repo: "littleman-co/www-littleman-co"
-      dockerfile: "build/container/Dockerfile"
-      json_key:
-        from_secret: "GOOGLE_SERVICE_ACCOUNT"
-  - name: "deploy"
-    image: "quay.io/littlemanco/helm"
-    environment:
-      B64_GOOGLE_SERVICE_ACCOUNT:
-        from_secret: "B64_GOOGLE_SERVICE_ACCOUNT"
-      GOOGLE_APPLICATION_CREDENTIALS: "/tmp/.google-service-account.json"
-      GOOGLE_PROJECT_NAME: "littleman-co"
-      GOOGLE_PROJECT_REGION: "europe-west1-d"
-      GOOGLE_GKE_CLUSTER_NAME: "littleman-co"
-      KUBERNETES_NAMESPACE: "www-littleman-co"
+  - name: "test"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
-      - "echo $B64_GOOGLE_SERVICE_ACCOUNT | base64 -d > $GOOGLE_APPLICATION_CREDENTIALS"
-      - "gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS"
-      - "gcloud config set project $GOOGLE_PROJECT_NAME"
-      - "gcloud container clusters get-credentials --zone $GOOGLE_PROJECT_REGION $GOOGLE_GKE_CLUSTER_NAME"
-      - "helm upgrade --install --namespace www-littleman-co www-littleman-co deploy/helm"
-
+      - /usr/local/bin/robo test:unit
+trigger:
+  event:
+    - pull_request
+---
+kind: "pipeline"
+name: "integration-test"
+steps:
+  - name: "test"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
+    commands:
+      - /usr/local/bin/robo test:integration
+trigger:
+  event:
+    - pull_request
+depends_on:
+  - lint
+  - unit-test
+---
+kind: "pipeline"
+name: "smoke-test"
+steps:
+  - name: "test"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
+    commands:
+      - /usr/local/bin/robo test:smoke
+trigger:
+  event:
+    - pull_request
+depends_on:
+  - lint
+  - unit-test
+---
+kind: "pipeline"
+name: "stress-test"
+steps:
+  - name: "test"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
+    commands:
+      - /usr/local/bin/robo test:stress
+trigger:
+  event:
+    - pull_request
+depends_on:
+  - lint
+  - unit-test
+---
+kind: "pipeline"
+name: "container"
+steps:
+  - name: "container"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
+    commands:
+      - /usr/local/bin/robo container:update --container=web
 trigger:
   branch:
-    - "master"
+    - master
   event:
-    - "push"
+    - push
+---
+kind: "pipeline"
+name: "canary"
+steps:
+  - name: "canary"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
+    commands:
+      - /usr/local/bin/robo deploy --environment=canary
+trigger:
+  branch:
+    - master
+  event:
+    - push
+depends_on:
+  - container
+---
+kind: "pipeline"
+name: "production"
+steps:
+  - name: "deploy"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
+    commands:
+      - /usr/local/bin/robo deploy --environment=production
+trigger:
+  event:
+    - promote
+  target:
+    - production
+  branch:
+    - master
+---
+kind: "pipeline"
+name: "rollback"
+steps:
+  - name: "rollback"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
+    commands:
+      - /usr/local/bin/robo rollback --environment=production
+trigger:
+  event:
+    - rollback
+  target:
+    - production
+  branch:
+    - master
