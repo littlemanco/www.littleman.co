@@ -71,7 +71,8 @@ steps:
   - name: "container"
     image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
-      - /usr/local/bin/robo container:update --container=web
+      - /usr/local/bin/robo container:build --container=web
+      - /usr/local/bin/robo container:push --container=web
 trigger:
   branch:
     - master
