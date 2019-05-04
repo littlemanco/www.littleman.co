@@ -54,6 +54,14 @@ class RoboFile extends \Robo\Tasks
     }
 
     /**
+     * Compiles the static site
+     */
+    public function applicationCompile()
+    {
+        return $this->taskExec('hugo');
+    }
+
+    /**
      * Builds containers. Available containers are those at the path "build/containers"
      *
      * @option container The container to build

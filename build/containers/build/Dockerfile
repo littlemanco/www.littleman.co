@@ -29,11 +29,23 @@ RUN apt-get update && \
     docker-ce-cli \
     # Version control \
     git \
+    # Static site runtime \
+    ruby \
+    # Static site generator \
+    hugo \
     # Task runner runtime
     php && \
     # Linting Tools
     pip install \
         yamllint
+
+# Compilation
+RUN gem install \
+        asciidoctor:1.5.8 \
+        asciidoctor-bibtex \
+        rouge
+
+COPY bin/asciidoctor /usr/local/bin/asciidoctor
 
 # Install the task runer
 RUN curl -O https://robo.li/robo.phar && \
