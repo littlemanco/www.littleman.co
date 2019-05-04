@@ -6,3 +6,8 @@ steps:
     image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
     commands:
       - /usr/local/bin/robo lint
+
+trigger:
+  # Execute this process every time a new pull request is opened
+  event:
+    - pull_request
