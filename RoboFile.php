@@ -23,6 +23,14 @@ class RoboFile extends \Robo\Tasks
     }
 
     /**
+     * Runs unit tests on the codebase
+     */
+    public function testUnit()
+    {
+        $this->say('This project has no unit tests; this is a demonstration task');
+    }
+
+    /**
      * Builds containers. Available containers are those at the path "build/containers"
      *
      * @option container The container to build
