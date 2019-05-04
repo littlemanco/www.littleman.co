@@ -74,14 +74,6 @@ steps:
       - /usr/local/bin/robo application:compile
       - /usr/local/bin/robo container:build --container=web
       - /usr/local/bin/robo container:push --container=web
-    volumes:
-      - name: docker
-        path: /var/run/docker.sock
-
-volumes:
-- name: docker
-  host:
-    path: /var/run/docker.sock
 
 trigger:
   branch:
