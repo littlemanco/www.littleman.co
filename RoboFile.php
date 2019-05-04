@@ -87,4 +87,22 @@ class RoboFile extends \Robo\Tasks
             ->args(['push', $containerName . ':latest'])
             ->run();
     }
+
+    /**
+     * Pushes a change to a given environment
+     * 
+     * @option environment The environment to push to. Should be one of "testing", "canary" or "production"
+     */
+    public function deploy($opts = ['environment' => 'testing'])
+    {
+        $this->say('This project does not deploy with this yet, though it would deploy to ' . $opts['environment']);
+    }
+
+    /**
+     * Rolls back a change to a given environment to the previous version of that change.
+     */
+    public function rollback()
+    {
+        $this->say('This project does not rollback yet');
+    }
 }

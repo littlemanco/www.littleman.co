@@ -64,3 +64,62 @@ trigger:
 depends_on:
   - lint
   - unit-test
+---
+kind: "pipeline"
+name: "container"
+steps:
+  - name: "container"
+    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    commands:
+      - /usr/local/bin/robo container:build --container=web
+      - /usr/local/bin/robo container:push --container=web
+trigger:
+  branch:
+    - master
+  event:
+    - push
+---
+kind: "pipeline"
+name: "canary"
+steps:
+  - name: "canary"
+    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    commands:
+      - /usr/local/bin/robo deploy --environment=canary
+trigger:
+  branch:
+    - master
+  event:
+    - push
+depends_on:
+  - container
+---
+kind: "pipeline"
+name: "production"
+steps:
+  - name: "deploy"
+    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    commands:
+      - /usr/local/bin/robo deploy --environment=production
+trigger:
+  event:
+    - promote
+  target:
+    - production
+  branch:
+    - master
+---
+kind: "pipeline"
+name: "rollback"
+steps:
+  - name: "rollback"
+    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    commands:
+      - /usr/local/bin/robo rollback --environment=production
+trigger:
+  event:
+    - rollback
+  target:
+    - production
+  branch:
+    - master
