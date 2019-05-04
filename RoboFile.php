@@ -71,17 +71,15 @@ class RoboFile extends \Robo\Tasks
         $refspec       = exec('git rev-parse --short HEAD');
         $containerName = self::CONTAINER_NAMESPACE . '--' . $opts['container'];
 
-        return $this->taskDockerBuild('.')
+        return $this->taskExec('img')
+            ->stopOnFail()
             ->args([
-                "--file=" 
-                . self::CONTAINER_PATH 
-                . DIRECTORY_SEPARATOR 
-                . $opts['container'] 
-                . DIRECTORY_SEPARATOR 
-                . 'Dockerfile'
-                ])
-            ->tag($containerName . ':' . $refspec)
-            ->tag($containerName . ':latest' );
+                "build",
+                "--file=" . self::CONTAINER_PATH . '/' . $opts['container'] . '/' . 'Dockerfile',
+                "--tag=" . $containerName . ':' . $refspec,
+                "--tag=" . $containerName . ':' . $refspec,
+                "."
+            ]);
     }
 
     /**
@@ -96,8 +94,8 @@ class RoboFile extends \Robo\Tasks
 
         return $this->taskExecStack('docker')
             ->stopOnFail()
-            ->exec('docker push ' . $containerName . ':' . $refspec)
-            ->exec('docker push ' . $containerName . ':latest');
+            ->exec('img push ' . $containerName . ':' . $refspec)
+            ->exec('img push ' . $containerName . ':latest');
     }
 
     /**

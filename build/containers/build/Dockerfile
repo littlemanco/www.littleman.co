@@ -15,18 +15,15 @@ RUN apt-get install --yes \
     software-properties-common \
     lsb-release
 
-# Docker installation
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository \
-        "deb [arch=amd64] https://download.docker.com/linux/debian \
-        $(lsb_release -cs) \
-        stable"
+# img installation
+RUN export IMG_SHA256="f5d686465a7463c296e94634bd9597af58544ead924567c9128a4ee352591bf1" \ 
+    && curl -fSL "https://github.com/genuinetools/img/releases/download/v0.5.6/img-linux-amd64" -o "/usr/local/bin/img" \
+    && echo "${IMG_SHA256}  /usr/local/bin/img" | sha256sum -c - \
+    && chmod a+x "/usr/local/bin/img"
 
 # Tool installation
 RUN apt-get update && \
     apt-get install --yes \
-    # Artifact generation 
-    docker-ce-cli \
     # Version control \
     git \
     # Static site runtime \
