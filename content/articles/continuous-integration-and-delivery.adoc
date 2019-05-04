@@ -264,15 +264,7 @@ $ robo init
 
 $ cat RoboFile.php 
 <?php
-/**
- * This is project's console commands configuration for Robo task runner.
- *
- * @see http://robo.li/
- */
-class RoboFile extends \Robo\Tasks
-{
-    // define public methods as commands
-}
+class RoboFile extends \Robo\Tasks {}
 ----
 
 We then add our tasks in our task runners domain specific language; in this case, by writing a public function in
@@ -363,7 +355,7 @@ However, they should all work and be useful locally before they're consumed in t
 
 == Designing the pipeline
 
-=== Choosing a build tool
+=== Choosing a CI/CD server
 
 There are many different CI/CD tools that are available, both implemented as open source and commercially supported.
 However, some tools are better than others. To me, the most important characteristics are:
@@ -417,6 +409,7 @@ Unfortunately this by itself does not work:
 
 image:/images/continuous-integration-and-delivery/failing-build-robo-not-found.png[A build failure due to the missing "robo" binary]
 
+While the job is executed, the build environment is the tools to invoke the task runner and do the required `${WORK}`.
 There are two possible solutions to this:
 
 1. Install the tools in the pipeline
@@ -483,7 +476,7 @@ The logic to build (and push) this new Dockerfile can be embedded in the same ta
     }
 ----
 
-Once the image has been pushed to the repository we can consume it in our build configuration:
+Once the image has been built & pushed to the repository we can consume it in our build configuration:
 
 [source,yaml]
 ----
@@ -504,77 +497,229 @@ image:/images/continuous-integration-and-delivery/successful-build-robo-found.pn
 This repeats for however many tasks the build should consist of; lints, tests and eventually even the deployment.
 
 TIP: In this case a private image is used but authentication is delegated to the build farm directly, rather than
-     specified in the build configuration. Practically Drone runs on top of GKE.
+     specified in the build configuration. Practically, Drone runs on top of GKE in which the docker daemon is
+     pre-authorized to the container registry.
 
 TIP: Like other docker images, it's good to keep the build containers small and suited for the task. The build container
      need not be the deploy container, nor the analysis container and so on. Such reducing of responsibility helps
      prevent unintended dependencies on the state or applications of other containers.
 
-=== Building the pipeline
+=== The pipeline
 
-- Triggers
-- Deployments
-- Etc
+So far we are able to write tasks that do some analysis work on the build, already a huge step forward in our ability
+to ensure system correctness over time.
 
-// Todo: Writing spec, designing build environments, doing the DAG.
+However, a pipeline is not a single job; rather, it is a series of jobs that are triggered in a particular circumstance.
+There are two that I use regularly:
 
-// DAG
-// Simple examples
-// Embedding in pipeline
-// ETC
-// Todo: Talk aobut how Docker has made it easy to be specific about environments, and made them cheap
-// Still thinking about this
-// Todo: Gitops
+- *Pull Request*: A workflow designed to ensure changes do not break the system. Triggered by the creation of the pull
+                  request and blocking the pull request from being merged until the build is successful.
+- *Deployment*:   A workflow designed to push the "known good" code to a production system
+
+They usually look something like:
+
+image:/images/continuous-integration-and-delivery/pipeline-dag.png[The PR and deployment pipeline graph]
+
+The specific steps involved depend on your deployment model, available tests or other requirements. However there can
+be multiple workflows and each workflow can consist of an arbitrarily complex set of steps. The pipelines are usually
+invoked by some sort of "trigger" mechanism; some signal to the CI tool to start a specific pipeline. In the case of
+Drone the configuration https://docs.drone.io/user-guide/pipeline/triggers/[is called just that -- triggers]. 
+
+TIP: There are situations in which it is desirable to deploy to production in a hurry, without verifying the software
+     for correctness, such as a security issue or other disaster management process. Accordingly, the production
+     pipeline should be less than 5 minutes to complete and extremely reliable.
+
+==== Pull Request
+
+To create a "pull request" workflow, the configuration looks like:
+
+[source,yaml]
+----
+---
+kind: "pipeline"
+name: "lint"
+steps:
+  - name: "lint"
+    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    commands: 
+      - /usr/local/bin/robo lint
+
+trigger:
+  # Execute this process every time a new pull request is opened
+  event:
+    - pull_request
+----
+
+Jobs can be executed in parallel by specifying multiple pipelines that have the same dependencies:
+
+[source,yaml]
+----
+---
+# Steps are omitted for brevity in the post
+kind: "pipeline"
+name: "lint"
+steps: []
+trigger:
+  event:
+    - pull_request
+---
+kind: "pipeline"
+name: "unit-test"
+steps: []
+trigger:
+  event:
+    - pull_request
+----
+
+And it's possible to "gate" steps on the success on other steps by using the "depends_on" node:
+
+[source,yaml]
+----
+---
+# Steps are omitted for brevity in the post
+kind: "pipeline"
+name: "lint"
+steps: []
+trigger:
+  event:
+    - pull_request
+---
+kind: "pipeline"
+name: "unit-test"
+steps: []
+trigger:
+  event:
+    - pull_request
+---
+kind: "pipeline"
+name: "integration-test"
+steps: []
+trigger:
+  event:
+    - pull_request
+depends_on:
+  - lint
+  - unit-test
+---
+kind: "pipeline"
+name: "stress-test"
+steps: []
+trigger:
+  event:
+    - pull_request
+depends_on:
+  - lint
+  - unit-test
+---
+kind: "pipeline"
+name: "smoke-test"
+steps: []
+trigger:
+  event:
+    - pull_request
+depends_on:
+  - lint
+  - unit-test
+----
+
+This gives us our ability to create our graph. So far we have generated only the first two steps:
+
+image:/images/continuous-integration-and-delivery/dag-first-two-steps.png[The pipeline pull request initial steps]
+
+However, we can see our pipeline working as expected:
+
+https://youtu.be/EC5W4L7YqsI
+
+video::EC5W4L7YqsI[youtube]
+
+==== Deployment
+
+Implementing the deployment task is exactly the same process, varying only in the triggers. However, one common use
+case for production is being able to manually gate builds based on some human intervention. In the case of Drone
+this is termed "Promotion". Given configuration that looks like:
+
+
+
+TIP: Our configuration is getting very long and repetitive at this point. Drone has some support for jsonnet as a
+     configuration language to help remedy this, or jsonnet can be expressed to yaml prior to the build execution
+     and committed.
+
+// Another post
+// Deployment: Another post
+
+// === Enforcing pipeline use
+
+// - GitHub allows preventing push to branch
+// - IT also allows preventing merge until build passes
+
+// WARNING: Requires "break glass" procedure for pushing changes to production in a hurry. Practically on GitHUb this
+//          means administrators can skip protections
+
+// - Triggers
+// - Deployments
+// - Etc
+
+// // Todo: Writing spec, designing build environments, doing the DAG.
+
+// // DAG
+// // Simple examples
+// // Embedding in pipeline
+// // ETC
+// // Todo: Talk aobut how Docker has made it easy to be specific about environments, and made them cheap
+// // Still thinking about this
+// // Todo: Gitops
 
 
 
 
 
-=== Responsibilities
+// === Responsibilities
 
-1. Lint
-2. Test
-3. Smoke test
-4. Deploy (using external tooling)
-5. Roll back
+// 1. Lint
+// 2. Test
+// 3. Smoke test
+// 4. Deploy (using external tooling)
+// 5. Roll back
 
-=== Writing the jobs
+// === Writing the jobs
 
-== CI staying successful
+// == CI staying successful
 
-(From Martin Fowler):
-- Maintain a Single Source Repository.
-- Automate the Build
-- Make Your Build Self-Testing
-- Everyone Commits To the Mainline Every Day
-- Every Commit Should Build the Mainline on an Integration Machine
-- Fix Broken Builds Immediately
-- Keep the Build Fast
-- Test in a Clone of the Production Environment
-- Make it Easy for Anyone to Get the Latest Executable
-- Everyone can see what's happening
--- Read: This means it's a communication tools
-- Automate Deployment
+// (From Martin Fowler):
+// - Maintain a Single Source Repository.
+// - Automate the Build
+// - Make Your Build Self-Testing
+// - Everyone Commits To the Mainline Every Day
+// - Every Commit Should Build the Mainline on an Integration Machine
+// - Fix Broken Builds Immediately
+// - Keep the Build Fast
+// - Test in a Clone of the Production Environment
+// - Make it Easy for Anyone to Get the Latest Executable
+// - Everyone can see what's happening
+// -- Read: This means it's a communication tools
+// - Automate Deployment
 
-(Mine)
-- Integrated into existing tooling (GitHub, PRs)
-- Simple & Clear
-- Fast!
--- Parallel; DAG.
-- Reliable!!
-- Handles the deployment as a result of the checks
-- Can be promoted
-- Generally speaking, all in the same repository save specifically vendored libraries.
-- Build environents in VCS also
+// (Mine)
+// - Integrated into existing tooling (GitHub, PRs)
+// - Simple & Clear
+// - Fast!
+// -- Needs to be so if there are emergencies it can be rolled out quickly
+// -- Parallel; DAG.
+// - Reliable!!
+// - Handles the deployment as a result of the checks
+// - Can be promoted
+// - Generally speaking, all in the same repository save specifically vendored libraries.
+// - Build environents in VCS also
+// - Singel pipeline (keif morris)
 
-Anti Features
-- Controlling which environment to deploy to
-- Holding back specific deployments
-- Allowing environment specific configuration
-- Introducing new stuff to the build that breaks it will also break confidence, or if it break sand nothing bad happens,
-  hit alert fatigue. The build must remain on average green; if it's going red all the time, either the development
-  practice is fundamentally broken and must be addressed or the build is.
+// Anti Features
+// - Controlling which environment to deploy to
+// - Holding back specific deployments
+// - Allowing environment specific configuration
+// - Introducing new stuff to the build that breaks it will also break confidence, or if it break sand nothing bad happens,
+//   hit alert fatigue. The build must remain on average green; if it's going red all the time, either the development
+//   practice is fundamentally broken and must be addressed or the build is.
 
-== References  
+// == References  
 
-bibliography::[]
+// bibliography::[]
