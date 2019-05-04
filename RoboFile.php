@@ -77,7 +77,7 @@ class RoboFile extends \Robo\Tasks
                 "build",
                 "--file=" . self::CONTAINER_PATH . '/' . $opts['container'] . '/' . 'Dockerfile',
                 "--tag=" . $containerName . ':' . $refspec,
-                "--tag=" . $containerName . ':' . $refspec,
+                "--tag=" . $containerName . ':latest',
                 "."
             ]);
     }
