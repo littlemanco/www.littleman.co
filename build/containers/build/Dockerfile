@@ -27,6 +27,8 @@ RUN apt-get update && \
     apt-get install --yes \
     # Artifact generation 
     docker-ce-cli \
+    # Version control \
+    git \
     # Task runner runtime
     php && \
     # Linting Tools
