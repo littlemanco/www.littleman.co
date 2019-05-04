@@ -70,9 +70,14 @@ name: "container"
 steps:
   - name: "container"
     image: "gcr.io/littleman-co/www-littleman-co--build:d7c8edd"
+    environment:
+      GOOGLE_SERVICE_ACCOUNT:
+        from_secret: GOOGLE_SERVICE_ACCOUNT
     # Required to build container
     privileged: true
     commands:
+      # Enable img to push to docker registry
+      - img login -u _json_key -p "$GOOGLE_SERVICE_ACCOUNT" https://gcr.io
       - /usr/local/bin/robo application:compile
       - /usr/local/bin/robo container:build --container=web
       - /usr/local/bin/robo container:push --container=web
