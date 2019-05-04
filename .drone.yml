@@ -19,8 +19,48 @@ steps:
     image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
     commands:
       - /usr/local/bin/robo test:unit
-
 trigger:
-  # Execute this process every time a new pull request is opened
   event:
     - pull_request
+---
+kind: "pipeline"
+name: "integration-test"
+steps:
+  - name: "test"
+    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    commands:
+      - /usr/local/bin/robo test:integration
+trigger:
+  event:
+    - pull_request
+depends_on:
+  - lint
+  - unit-test
+---
+kind: "pipeline"
+name: "smoke-test"
+steps:
+  - name: "test"
+    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    commands:
+      - /usr/local/bin/robo test:smoke
+trigger:
+  event:
+    - pull_request
+depends_on:
+  - lint
+  - unit-test
+---
+kind: "pipeline"
+name: "stress-test"
+steps:
+  - name: "test"
+    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    commands:
+      - /usr/local/bin/robo test:stress
+trigger:
+  event:
+    - pull_request
+depends_on:
+  - lint
+  - unit-test

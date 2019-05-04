@@ -31,6 +31,30 @@ class RoboFile extends \Robo\Tasks
     }
 
     /**
+     * Runs integration tests on the codebase
+     */
+    public function testIntegration()
+    {
+        $this->say('This project has no integration tests; this is a demonstration task');
+    }
+
+    /**
+     * Runs smoke tests on the codebase
+     */
+    public function testSmoke()
+    {
+        $this->say('This project has no smoke tests; this is a demonstration task');
+    }
+
+    /**
+     * Runs stress tests on the codebase
+     */
+    public function testStress()
+    {
+        $this->say('This project has no stress tests; this is a demonstration task');
+    }
+
+    /**
      * Builds containers. Available containers are those at the path "build/containers"
      *
      * @option container The container to build
