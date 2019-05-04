@@ -18,8 +18,7 @@ class RoboFile extends \Robo\Tasks
     {
         return $this->taskExecStack()
             ->stopOnFail()
-            ->exec('yamllint .')
-            ->run();
+            ->exec('yamllint .');
     }
 
     /**
@@ -64,10 +63,17 @@ class RoboFile extends \Robo\Tasks
         $refspec       = exec('git rev-parse --short HEAD');
         $containerName = self::CONTAINER_NAMESPACE . '--' . $opts['container'];
 
-        $this->taskDockerBuild(self::CONTAINER_PATH . DIRECTORY_SEPARATOR . $opts['container'])
+        return $this->taskDockerBuild('.')
+            ->args([
+                "--file=" 
+                . self::CONTAINER_PATH 
+                . DIRECTORY_SEPARATOR 
+                . $opts['container'] 
+                . DIRECTORY_SEPARATOR 
+                . 'Dockerfile'
+                ])
             ->tag($containerName . ':' . $refspec)
-            ->tag($containerName . ':latest' )
-            ->run();
+            ->tag($containerName . ':latest' );
     }
 
     /**
@@ -80,12 +86,10 @@ class RoboFile extends \Robo\Tasks
         $refspec       = exec('git rev-parse --short HEAD');
         $containerName = self::CONTAINER_NAMESPACE . '--' . $opts['container'];
 
-        $this->taskExec('docker')
-            ->args(['push', $containerName . ':' . $refspec])
-            ->run();
-        $this->taskExec('docker')
-            ->args(['push', $containerName . ':latest'])
-            ->run();
+        return $this->taskExecStack('docker')
+            ->stopOnFail()
+            ->exec('docker push ' . $containerName . ':' . $refspec)
+            ->exec('docker push ' . $containerName . ':latest');
     }
 
     /**

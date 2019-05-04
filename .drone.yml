@@ -3,7 +3,7 @@ kind: "pipeline"
 name: "lint"
 steps:
   - name: "lint"
-    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
       - /usr/local/bin/robo lint
 
@@ -16,7 +16,7 @@ kind: "pipeline"
 name: "unit-test"
 steps:
   - name: "test"
-    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
       - /usr/local/bin/robo test:unit
 trigger:
@@ -27,7 +27,7 @@ kind: "pipeline"
 name: "integration-test"
 steps:
   - name: "test"
-    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
       - /usr/local/bin/robo test:integration
 trigger:
@@ -41,7 +41,7 @@ kind: "pipeline"
 name: "smoke-test"
 steps:
   - name: "test"
-    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
       - /usr/local/bin/robo test:smoke
 trigger:
@@ -55,7 +55,7 @@ kind: "pipeline"
 name: "stress-test"
 steps:
   - name: "test"
-    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
       - /usr/local/bin/robo test:stress
 trigger:
@@ -69,10 +69,9 @@ kind: "pipeline"
 name: "container"
 steps:
   - name: "container"
-    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
-      - /usr/local/bin/robo container:build --container=web
-      - /usr/local/bin/robo container:push --container=web
+      - /usr/local/bin/robo container:update --container=web
 trigger:
   branch:
     - master
@@ -83,7 +82,7 @@ kind: "pipeline"
 name: "canary"
 steps:
   - name: "canary"
-    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
       - /usr/local/bin/robo deploy --environment=canary
 trigger:
@@ -98,7 +97,7 @@ kind: "pipeline"
 name: "production"
 steps:
   - name: "deploy"
-    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
       - /usr/local/bin/robo deploy --environment=production
 trigger:
@@ -113,7 +112,7 @@ kind: "pipeline"
 name: "rollback"
 steps:
   - name: "rollback"
-    image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
+    image: "gcr.io/littleman-co/www-littleman-co--build:1017661"
     commands:
       - /usr/local/bin/robo rollback --environment=production
 trigger:
