@@ -765,9 +765,6 @@ TIP: Our configuration is getting very long and repetitive at this point. Drone 
      configuration language to help remedy this, or jsonnet can be expressed to yaml prior to the build execution
      and committed.
 
-CAUTION: In the build configuration above there is a "rollback" step. At the time of writing this
-         https://github.com/drone/drone/issues/2695[appears to be broken].
-
 == In Conclusion
 
 Continuous integration & delivery has become a fairly essential part of software development. It augments the software
