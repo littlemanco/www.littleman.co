@@ -28,28 +28,28 @@ Particular solution works best for them.
 
 Because I have both been able to get a view across these teams and have in the past build several systems that
 reflect each design I felt it reasonable to try and explain how I design them now, given that experience,
-as well as what the characteristics of a "good" pipeline are. 
+as well as what the characteristics of a "good" pipeline are.
 
 To ensure that we're on the same page let's start by defining CI/CD:
 
-CAUTION: This article presumes a git repository layout as defined in 
+CAUTION: This article presumes a git repository layout as defined in
         https://www.littleman.co/articles/laying-out-a-git-repository/[Laying out a git repository]
 
 == Definitions
 
-One of the early adopters and more vocal organisational proponents of Continuous Integration, ThoughtWorks, 
+One of the early adopters and more vocal organisational proponents of Continuous Integration, ThoughtWorks,
 defines CI as:
 
-> ... a development practice that requires developers to integrate code into a shared repository several times
-> a day. Each check-in is then verified by an automated build, allowing teams to detect problems 
+> …a development practice that requires developers to integrate code into a shared repository several times
+> a day. Each check-in is then verified by an automated build, allowing teams to detect problems
 > early^cite:[tw.ci]^
 
 They go on to define Continuous Delivery:
 
-> ... the natural extension of Continuous Integration, an approach in which teams ensure that every  change to the 
+> …the natural extension of Continuous Integration, an approach in which teams ensure that every  change to the
 > system is releasable, and release any version with the push of a] button^cite:[tw.cd]^.
 
-Even given these definitions too understand how to operate CI/CD now it's first worth understanding how CI/CD came to 
+Even given these definitions too understand how to operate CI/CD now it's first worth understanding how CI/CD came to
 be.
 
 == A little history
@@ -69,7 +69,7 @@ Unfortunately neither are generally true of software project and the approach qu
 prescient to this article is called "integration pain", and denotes the period of time in which developer work is
 reconciled and tested together before release. Martin Fowler describes the story:
 
-> My manager, part of the QA group, gave me a tour of a site and we entered a huge depressing warehouse stacked full 
+> My manager, part of the QA group, gave me a tour of a site and we entered a huge depressing warehouse stacked full
 > with cubes. I was told that this project had been in development for a couple of years and was currently integrating,
 > and had been integrating for several months. My guide told me that nobody really knew how long it would take to finish
 > integrating^cite:[mf.ci]^.
@@ -81,20 +81,20 @@ following its release and bugs that are discovered later in the process are up t
 those discovered earlier^cite:[syn.costs]^.
 
 
-As a mechanism to address these and other issues with the SDLC Kent Beck developed the _Extreme Programming_ (XP) 
+As a mechanism to address these and other issues with the SDLC Kent Beck developed the _Extreme Programming_ (XP)
 approach, the precursor to the "Agile" software development approach^cite:[mf.xp]^. Among other things XP endorsed the
-use of continuous integration as a mechanism to ensure that integration pain was much reduced, bugs were caught early 
+use of continuous integration as a mechanism to ensure that integration pain was much reduced, bugs were caught early
 and the software could be adjusted to new requirements. Kent used this approach with various projects including the
-"Chrysler Comprehensive Compensation" project with Martin Fowler^cite:[mf.ci]^, who would later go on to publish and 
+"Chrysler Comprehensive Compensation" project with Martin Fowler^cite:[mf.ci]^, who would later go on to publish and
 popularize this approach.
 
 While not a requirement for continuous integration^cite:[mf.ci]^, CI servers became a popular method of implementing
 this approach. ThoughtWorks were among the first with their "Cruise Control" serer, released in 2001^cite:[wiki.cc]^.
 Later Sun Microsystems developed "Hudson", released in 2015^cite:[wiki.hudson]^, the precursor to the infinitely
-popular and still widely used Jenkins CI. Jenkins was developed as a result of disputes with Suns purchasers 
+popular and still widely used Jenkins CI. Jenkins was developed as a result of disputes with Suns purchasers
 Oracle^cite:[wiki.hudson]^ and released in 2011^cite:[wiki.jenkins]^.
 
-Jenkins later introduced the concept of "Workflows", which were builds that could be checked in to version 
+Jenkins later introduced the concept of "Workflows", which were builds that could be checked in to version
 control instead of configured in a GUI^cite:[tc.ci]^ and marking the shift to CI systems entirely driven by VCS.
 
 It is difficult to map when containers started being used as environments in which to run CI jobs as the history
@@ -112,14 +112,14 @@ This brings us to the current era where the majority of CI/CD tools are built on
 In this case this post will be talking primarily about the https://drone.io/[Drone] build server which is an excellent
 open source implementation of this technology.
 
-NOTE: Tangentially related are cloud build services such as https://cloud.google.com/cloud-build/[Google Cloud Build] and 
+NOTE: Tangentially related are cloud build services such as https://cloud.google.com/cloud-build/[Google Cloud Build] and
      https://aws.amazon.com/codebuild/[Amazon Build Service]. While they're interesting, they're missing several
      important features of CI.
 
 == CI/CD as part of the Software Development Life Cycle
 
 While the historical context of how CI/CD was implemented is super useful for providing understanding of the pressures
-that generated CI understanding how it fits into the _software development life cycle_ (SDLC) first requires an 
+that generated CI understanding how it fits into the _software development life cycle_ (SDLC) first requires an
 understanding of how the SDLC is currently architected. One of the most common patterns of development is called the
 'feature branch' workflow^cite:[at.g.w]^.
 
@@ -174,8 +174,8 @@ I will then create a pull request^cite:[gh.pr]^:
 
 image:/images/continuous-integration-and-delivery/pull-request.png[Pull Request]
 
-And we see the first CI checks. In the image above we can see "Some checks have not completed yet", with a note that 
-Drone is running a "PR" job. It is here that CI is responsible for enforcing code safety checks such as unit, 
+And we see the first CI checks. In the image above we can see "Some checks have not completed yet", with a note that
+Drone is running a "PR" job. It is here that CI is responsible for enforcing code safety checks such as unit,
 integration and smoke tests:
 
 image:/images/continuous-integration-and-delivery/ci-tool-running-checks.png[CI tool running checks]
@@ -205,10 +205,10 @@ image:/images/continuous-integration-and-delivery/pipeline-simple.png[A set of b
 
 These sets of processes are usually referred to as a "Pipeline", named after the computing definition:
 
-> a set of data processing elements connected in series, where the output of one element is the input of the next 
+> a set of data processing elements connected in series, where the output of one element is the input of the next
   one^cite:[wiki.pipeline]^.
 
-There are several different components required to create such a CI/CD 
+There are several different components required to create such a CI/CD
 pipeline^cite:[wiki.linter],cite:[wiki.ut],cite:[wiki.it]^:
 
 [cols="2,8"]
@@ -217,13 +217,13 @@ pipeline^cite:[wiki.linter],cite:[wiki.ut],cite:[wiki.it]^:
 
 | Version Control      | Contain the current state of the software, be that the canonical version or a patch that has
                          been proposed _e.g. `git`, `svn`._
-| Linter               | A tool that analyzes source code to flag programming errors, bugs, stylistic errors, and 
-                         suspicious constructs _e.g. `phpcs`, `yamllint`._ 
-| Unit Tests           | A software testing method by which individual units of source code, sets of one or more 
+| Linter               | A tool that analyzes source code to flag programming errors, bugs, stylistic errors, and
+                         suspicious constructs _e.g. `phpcs`, `yamllint`._
+| Unit Tests           | A software testing method by which individual units of source code, sets of one or more
                          computer program modules together with associated control data, usage procedures, and operating
                          procedures, are tested to determine whether they are fit for use
-                         _e.g. `phpunit`._  
-| Integration Tests    | The phase in software testing in which individual software modules are combined and tested as 
+                         _e.g. `phpunit`._
+| Integration Tests    | The phase in software testing in which individual software modules are combined and tested as
                          a group.
 | Task Runner          | A tool that allows aggregating tasks such as application compilation, testing and deployment
                          behind a single interface _e.g. `make`, `robo`._
@@ -257,7 +257,7 @@ The pipeline should be invoked only with a single command with some argument ind
 robo deploy --environment=production
 ----
 
-This separation of responsibilities into the task runner, deployment manager and CI pipeline allows the reuse and 
+This separation of responsibilities into the task runner, deployment manager and CI pipeline allows the reuse and
 debugging of the majority of the pipeline locally, switching between CI/CD services without undue cost and makes
 the pipelines as simple and predictable as possible.
 
@@ -268,7 +268,7 @@ NOTE: Practically there can be some setup required to authorize services and do 
       http://plugins.drone.io/[DroneCIs plugin system].
 
 == Writing the task
-  
+
 As discussed, the pipeline consists of a set of steps that need to be executed prior to verifying the codebase is still
 correct or deploying the software to some environment. Further, these steps should be executable both on the local
 machine and in the build pipeline in exactly the same way. The way to implement this is via a task runner, such as
@@ -277,11 +277,11 @@ https://robo.li[Robo]:
 [source,php]
 ----
 $ robo init
-  ~~~ Welcome to Robo! ~~~~ 
-  RoboFile.php will be created in the current directory 
-  Edit this file to add your commands! 
+  ~~~ Welcome to Robo! ~~~~
+  RoboFile.php will be created in the current directory
+  Edit this file to add your commands!
 
-$ cat RoboFile.php 
+$ cat RoboFile.php
 <?php
 class RoboFile extends \Robo\Tasks {}
 ----
@@ -295,11 +295,11 @@ class RoboFile extends \Robo\Tasks
 {
     /**
      * Runs lints over the codebase
-     * 
+     *
      * @option files A space separated list of files to lint
      */
     public function lint()
-    {   
+    {
         $this->taskExecStack()
             ->stopOnFail()
             ->exec('yamllint .')
@@ -444,7 +444,7 @@ While this invokes the build process, the build itself is not successful:
 
 image:/images/continuous-integration-and-delivery/failing-build-robo-not-found.png[A build failure due to the missing "robo" binary]
 
-The build environment is the tools to invoke the task runner and do the required `${WORK}`. There are two possible 
+The build environment is the tools to invoke the task runner and do the required `${WORK}`. There are two possible
 solutions to this:
 
 1. Install the tools in the pipeline
@@ -469,7 +469,7 @@ RUN apt-get update && \
     apt-get dist-upgrade --yes
 
 RUN apt-get install --yes \
-    # "Basic" tools 
+    # "Basic" tools
     curl \
     python python-pip \
     # Task runner runtime
@@ -558,7 +558,7 @@ image:/images/continuous-integration-and-delivery/pipeline-dag.png[The PR and de
 The specific steps involved depend on your deployment model, available tests or other requirements. However there can
 be multiple workflows and each workflow can consist of an arbitrarily complex set of steps. The pipelines are usually
 invoked by some sort of "trigger" mechanism; some signal to the CI tool to start a specific pipeline. In the case of
-Drone the configuration https://docs.drone.io/user-guide/pipeline/triggers/[is called just that -- triggers]. 
+Drone the configuration https://docs.drone.io/user-guide/pipeline/triggers/[is called just that -- triggers].
 
 TIP: There are situations in which it is desirable to deploy to production in a hurry, without verifying the software
      for correctness, such as a security issue or other disaster management process. Accordingly, the production
@@ -576,7 +576,7 @@ name: "lint"
 steps:
   - name: "lint"
     image: "gcr.io/littleman-co/www-littleman-co--build:da8b695"
-    commands: 
+    commands:
       - /usr/local/bin/robo lint
 
 trigger:
@@ -671,7 +671,7 @@ video::EC5W4L7YqsI[youtube]
 
 Implementing the deployment task is exactly the same process, varying only in the triggers. However, one common use
 case for production is being able to manually gate builds based on some human intervention. In the case of Drone
-this is termed "Promotion". 
+this is termed "Promotion".
 
 The first part of the build automatically pushes the most recent master change to the "canary" environment:
 
@@ -758,7 +758,7 @@ With this we achieve the desired "two step" build process:
 image:/images/continuous-integration-and-delivery/build-flow-with-promotion.png[A two step build, with promotion]
 
 Where step 1 is executed automatically on anything being added to the master branch, whereas step two requires a human
-to "promote" the build. At the time of writing 
+to "promote" the build. At the time of writing
 https://github.com/drone/drone-ui/issues/171[it is only possible to trigger the promotion via the CLI.]
 
 TIP: Our configuration is getting very long and repetitive at this point. Drone has some support for jsonnet as a
@@ -773,16 +773,16 @@ CAUTION: In the build configuration above there is a "rollback" step. At the tim
 Continuous integration & delivery has become a fairly essential part of software development. It augments the software
 delivery life cycle with additional correctness checking to find bugs earlier and dramatically reduces the cost and
 risk associated with pushing changes to production. There are many CI/CD servers however Drone implements all required
-features for the vast majority of software projects and is open source and trivially installable. With Drone we 
+features for the vast majority of software projects and is open source and trivially installable. With Drone we
 constructed a multi-step build cycle stubbing out lints, tests and other correctness checks common software, as well
 as stubbed out a workflow for continuous delivery.
 
 That's it! This post got a bit long, and I did not get to cover all of the things I would like to. However if you made
-it this far and you enjoyed it be sure to 
+it this far and you enjoyed it be sure to
 https://github.com/littlemanco/www.littleman.co/issues[voice yourself on GitHub], and I'll keep writing this stuff up.
 
 <3
 
-== References  
+== References
 
 bibliography::[]
