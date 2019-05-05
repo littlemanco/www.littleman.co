@@ -17,7 +17,7 @@ contributors:
 = Continuous integration & delivery
 
 Recently I have had the opportunity to join teams employing a number of different approaches to _continuous
-Integration and delivery_ (CI/CD).
+Integration and Delivery_ (CI/CD):
 
 1. *Version Control*: Scripts embedded in the git repository, executed as a result of git events
 2. *GUI*: Scripts written and uploaded to a server, executed on arbitrary events (time, git hooks)
@@ -30,53 +30,61 @@ Because I have both been able to get a view across these teams and have in the p
 reflect each design I felt it reasonable to try and explain how I design them now, given that experience,
 as well as what the characteristics of a "good" pipeline are. 
 
-To ensure that  we're on the same page let's start by defining CI/CD:
+To ensure that we're on the same page let's start by defining CI/CD:
 
 CAUTION: This article presumes a git repository layout as defined in 
         https://www.littleman.co/articles/laying-out-a-git-repository/[Laying out a git repository]
 
 == Definitions
 
-One of the early adopters and more vocal organisational proponents of Continuous Integration, Thoughtworks, 
+One of the early adopters and more vocal organisational proponents of Continuous Integration, ThoughtWorks, 
 defines CI as:
 
-> ...a development practice that requires developers to integrate code into a shared repository several times
+> ... a development practice that requires developers to integrate code into a shared repository several times
 > a day. Each check-in is then verified by an automated build, allowing teams to detect problems 
 > early^cite:[tw.ci]^
 
 They go on to define Continuous Delivery:
 
-> Continuous Delivery is the natural extension of Continuous Integration, an approach in which teams ensure that every 
-> change to the system is releasable, and release any version with the push of a] button^cite:[tw.cd]^.
+> ... the natural extension of Continuous Integration, an approach in which teams ensure that every  change to the 
+> system is releasable, and release any version with the push of a] button^cite:[tw.cd]^.
 
-With that out the way it's worth understanding how CI/CD came to be.
+Even given these definitions too understand how to operate CI/CD now it's first worth understanding how CI/CD came to 
+be.
 
 == A little history
 
-Though the iterative model of software development can be traced back to the 1950's^cite:[cl.history-iteration]^ it was
+Though the iterative model of software development can be traced back to the 1950s^cite:[cl.history-iteration]^ it was
 previously more common for software development to go through distinct phases, not unlike a construction or other major
 project:
 
 image:/images/continuous-integration-and-delivery/waterfall-release-pattern.png[Requirements → System Design → Implementation → Integration & Testing → Deployment → Maintenance]
 
-These phases presumed a stable set of requirements and market and had long periods of time where work from multiple
-teams was merged together and tested by the QA team. There were issues with approach however; to quote Martin Fowler:
+This is referred to as the "waterfall" pattern and it makes sense, presuming:
+
+1. A stable set of requirements
+2. A stable market demand
+
+Unfortunately neither are generally true of software project and the approach quickly ran into issues. The issue most
+prescient to this article is called "integration pain", and denotes the period of time in which developer work is
+reconciled and tested together before release. Martin Fowler describes the story:
 
 > My manager, part of the QA group, gave me a tour of a site and we entered a huge depressing warehouse stacked full 
 > with cubes. I was told that this project had been in development for a couple of years and was currently integrating,
 > and had been integrating for several months. My guide told me that nobody really knew how long it would take to finish
 > integrating^cite:[mf.ci]^.
 
-Beyond the integration pain, other challenges that occurred were the contrast between stable requirements and a rapidly
-shifting consumer expectations for software systems and the difficulty maintaining software following it's initial
-release. The later a bug is discovered in the Software Development Life Cycle (SDLC) the more expensive it is, with
-some estimations being that a bug found in the "testing" phase is up to 15 times more expensive than a bug found in 
-the "design" phase^cite:[syn.costs]^.
+In addition to this integration pain the challenges associated with shifting requirements and shifting consumer
+expectations mean that modern software projects are rarely "done", and instead burdened with attempting to meet a
+constantly shifting target. Software released in the "waterfall" pattern is difficult to maintain in a reasonable way
+following its release and bugs that are discovered later in the process are up to 15 times more expensive to fix than
+those discovered earlier^cite:[syn.costs]^.
 
-As a mechanism to address these and other issues with the SDLC Kent Beck developed the "Extreme Programming" approach,
-the precursor to the "Agile" software development approach^cite:[mf.xp]^. Among other things XP endorsed the use of
-continuous integration as a mechanism to ensure that integration pain was much reduced, bugs were caught early and the
-software could be adjusted to new requirements. Kent used this approach with various projects including the
+
+As a mechanism to address these and other issues with the SDLC Kent Beck developed the _Extreme Programming_ (XP) 
+approach, the precursor to the "Agile" software development approach^cite:[mf.xp]^. Among other things XP endorsed the
+use of continuous integration as a mechanism to ensure that integration pain was much reduced, bugs were caught early 
+and the software could be adjusted to new requirements. Kent used this approach with various projects including the
 "Chrysler Comprehensive Compensation" project with Martin Fowler^cite:[mf.ci]^, who would later go on to publish and 
 popularize this approach.
 
@@ -93,27 +101,32 @@ It is difficult to map when containers started being used as environments in whi
 of containers goes far further back than one might imagine^cite:[lmc.containers]^ however the earliest development
 of the Docker plugin for Jenkins goes back to 2014^cite:[gh.j.dp]^. The rise of the popularity of Docker and its
 excellent ephemeral environment tooling mean that many modern CI systems consume Docker containers as their
-only build environment^cite:[gl.ee.ci],cite:[bb.ci],cite:[dr.docs]^
+only build environment^cite:[gl.ee.ci],cite:[bb.ci],cite:[dr.docs]^.
 
-== CI/CD as part of the SDLC
+This brings us to the current era where the majority of CI/CD tools are built on top of:
+
+1. Version control
+2. Docker
+3. Multi-stage workflows
+
+In this case this post will be talking primarily about the https://drone.io/[Drone] build server which is an excellent
+open source implementation of this technology.
 
 NOTE: Tangentially related are cloud build services such as https://cloud.google.com/cloud-build/[Google Cloud Build] and 
      https://aws.amazon.com/codebuild/[Amazon Build Service]. While they're interesting, they're missing several
      important features of CI.
 
+== CI/CD as part of the Software Development Life Cycle
+
 While the historical context of how CI/CD was implemented is super useful for providing understanding of the pressures
-that generated CI understanding how it fits into the SDLC first requires an understanding of how the SDLC is currently
-architected. In both this and my last company we used a version of the feature branch workflow^cite:[at.g.w]^.
+that generated CI understanding how it fits into the _software development life cycle_ (SDLC) first requires an 
+understanding of how the SDLC is currently architected. One of the most common patterns of development is called the
+'feature branch' workflow^cite:[at.g.w]^.
 
-=== Change life cycle
-
-Prior to any development work being completed someone would write a "user story" or "bug report". These are tickets that
-describe either a new application behaviour or some circumstance in which the application does not behave as expected.
-The developer reads and contributes to the ticket determining if the should be updates made to the application,
-documentation or whether some tutelage is required to repair the problem in another system.
-
-Presuming the ticket is accepted for work the developer would add the ticket to the queue and, when that ticket comes
-up, begin implementation.
+The work begins with the description of requirements in a ticket, usually in the form of a "user story" or "bug report".
+These are tickets that either a new application behaviour or some circumstance in which the application does not behave
+as expected. I would then review the ticket, asking questions for clarification or to ensure that the feature is being
+used as expected before adding it to the work queue.
 
 Implementation starts by updating the local copy of version control. The canonical branch in all version control systems
 I use is called `master` and is the branch that is either deployed on production systems directly or used as a base
@@ -161,28 +174,29 @@ I will then create a pull request^cite:[gh.pr]^:
 
 image:/images/continuous-integration-and-delivery/pull-request.png[Pull Request]
 
-It's here where we first see continuous integration checks run. In the image above we can see "Some checks have not
-completed yet", with a note that Drone CI is running a "PR" job. It is here that CI is responsible for enforcing
-code safety checks such as unit tests, integration tests and if the tests have been built well enough smoke tests:
+And we see the first CI checks. In the image above we can see "Some checks have not completed yet", with a note that 
+Drone is running a "PR" job. It is here that CI is responsible for enforcing code safety checks such as unit, 
+integration and smoke tests:
 
 image:/images/continuous-integration-and-delivery/ci-tool-running-checks.png[CI tool running checks]
 
-Following the successful completion of these tests the PR is sent to a colleague for manual. If that colleague is
+Following the successful completion of these tests the PR is sent to a colleague for their review. If that colleague is
 happy with the changes they will merge the work into the mainline.
 
-Once the work is merged in to the mainline CI is responsible for deploying the work to a production system:
+Once the work is merged in to the `master` branch, CI is responsible for deploying the work to a production system:
 
 image:/images/continuous-integration-and-delivery/ci-tool-running-deployment.png[CI tool running deployment]
 
-That's it! Around 3 minutes after I (or my colleague) has merged code in the work is in production and facing
-users.
+Around 3 minutes after I (or my colleague) has merged code in the work is in production and facing users.
+
+That's it!
 
 == The building blocks of CI/CD
 
 Given the above development workflow we can see our CI/CD system has several different responsibilities, split into
 two areas of focus:
 
-1. Ensuring the program remains correct before work is merged in to the mainline
+1. Ensuring the program remains correct before work is merged in to the `master` branch
 2. Making the new software available to users
 
 This work is usually broken up into a staged process. The following is an example of the "Pull request" process:
@@ -194,7 +208,8 @@ These sets of processes are usually referred to as a "Pipeline", named after the
 > a set of data processing elements connected in series, where the output of one element is the input of the next 
   one^cite:[wiki.pipeline]^.
 
-There are several different components that make up the CI/CD pipeline^cite:[wiki.linter],cite:[wiki.ut],cite:[wiki.it]^:
+There are several different components required to create such a CI/CD 
+pipeline^cite:[wiki.linter],cite:[wiki.ut],cite:[wiki.it]^:
 
 [cols="2,8"]
 |===
@@ -216,9 +231,11 @@ There are several different components that make up the CI/CD pipeline^cite:[wik
                          purposes behind a single interface _e.g. `helm`._
 |===
 
-These tools should all be set up to be consumed both in and outside the CI/CD pipeline in exactly the same way. The
-pipeline itself should be as "dumb" as possible, only invoking the task runner in an environment with the tools
-available to complete the desired action:
+These tools are not specific to CI/CD but are rather general tools that are designed to track, ensure correctness and
+deploy the software. Accordingly they should be set up to be executed both in and outside the CI/CD environment with
+the environment itself being as "dumb" as possible. This can be done by putting the logic to run these tests behind
+a task runner and invoking that task runner both in the development and the CI/CD environment:
+
 
 image:/images/continuous-integration-and-delivery/pipeline-design.png[CI tool consumes task runner which does logic]
 
@@ -241,14 +258,14 @@ robo deploy --environment=production
 ----
 
 This separation of responsibilities into the task runner, deployment manager and CI pipeline allows the reuse and 
-debugging of the majority of the pipeline locally, allows switching between CI/CD services without undue cost and makes
+debugging of the majority of the pipeline locally, switching between CI/CD services without undue cost and makes
 the pipelines as simple and predictable as possible.
 
-TIP: Practically there can be some setup required to authorize services and do other environment specific setup in
-     CI/CD pipelines. This is nonsensical in a task runner but also should not be required on each job. In principle
-     the environment itself should consume credentials and set up access without work required for the particular job.
-     At the time of writing it looks like this is only possible with the use of
-     http://plugins.drone.io/[DroneCIs plugin system].
+NOTE: Practically there can be some setup required to authorize services and do other environment specific setup in
+      CI/CD pipelines. This is nonsensical in a task runner but also should not be required on each job. In principle
+      the environment itself should consume credentials and set up access without work required for the particular job.
+      At the time of writing it looks like this is only possible with the use of
+      http://plugins.drone.io/[DroneCIs plugin system].
 
 == Writing the task
   
@@ -305,12 +322,13 @@ www.littleman.co/config.yaml
   ...
 ----
 
-And adjust the lint (or the code) until it works as expected:
+And adjust the check (or the code) until it works as expected:
 
 [source,bash]
 ----
 cat <<EOF > .yamllint
 ---
+# Configuration for the linter that applies some sane defaults
 extends: default
 
 ignore: |
@@ -337,20 +355,34 @@ $ echo $?
 0           # Success
 ----
 
-Once the step is successful and committed it is ready to be consumed in the build pipeline. Steps can be written
-for any number of tasks:
+After which the step can be committed to version control and is ready to be consumed in the CI/CD pipeline. Steps can
+be written for any number of tasks:
+
 
 [source,bash]
 ----
 $ robo list
-....
+
+...
+
 Available commands:
-  deploy          
-  help            Displays help for a command
-  integration     
-  lint            Runs lints over the codebase
-  list            Lists commands
-  test            
+  deploy               Pushes a change to a given environment
+  help                 Displays help for a command
+  lint                 Runs lints over the codebase
+  list                 Lists commands
+  rollback             Rolls back a change to a given environment to the previous version of that change.
+ application
+  application:compile  Compiles the static site
+ container
+  container:build      Builds containers. Available containers are those at the path "build/containers"
+  container:push       Pushes containers
+ self
+  self:update          [update] Updates Robo to the latest version.
+ test
+  test:integration     Runs integration tests on the codebase
+  test:smoke           Runs smoke tests on the codebase
+  test:stress          Runs stress tests on the codebase
+  test:unit            Runs unit tests on the codebase
 ----
 
 However, they should all work and be useful locally before they're consumed in the pipeline.
@@ -375,7 +407,8 @@ There are several tools that match this criteria, including:
 3. BitBucket Pipelines
 4. GitLab Pipelines
 
-There are likely many more. However, for the purpose of this tutorial we'll be adopting Drone CI.
+There are likely many more. However, of the tools I've tried so far I prefer the Drone build system. It is an excellent
+combination of simple, opinionated and well integrated into existing build tooling.
 
 === Writing the job
 
@@ -407,12 +440,12 @@ $ git commit -m "Create an initial build configuration"
 $ git push origin ad-hoc-ci-cd-demo
 ----
 
-Unfortunately this by itself does not work:
+While this invokes the build process, the build itself is not successful:
 
 image:/images/continuous-integration-and-delivery/failing-build-robo-not-found.png[A build failure due to the missing "robo" binary]
 
-While the job is executed, the build environment is the tools to invoke the task runner and do the required `${WORK}`.
-There are two possible solutions to this:
+The build environment is the tools to invoke the task runner and do the required `${WORK}`. There are two possible 
+solutions to this:
 
 1. Install the tools in the pipeline
 2. Create a container that includes the build tools
@@ -638,7 +671,9 @@ video::EC5W4L7YqsI[youtube]
 
 Implementing the deployment task is exactly the same process, varying only in the triggers. However, one common use
 case for production is being able to manually gate builds based on some human intervention. In the case of Drone
-this is termed "Promotion". Given configuration that looks like:
+this is termed "Promotion". 
+
+The first part of the build automatically pushes the most recent master change to the "canary" environment:
 
 [source,yaml]
 ----
@@ -680,6 +715,13 @@ trigger:
     - push
 depends_on:
   - container
+----
+
+However, the code does not make it all the way to the production system. That configuration is gated by a trigger
+called the "promotion" trigger:
+
+[source,yaml]
+----
 ---
 kind: "pipeline"
 name: "production"
@@ -695,30 +737,10 @@ trigger:
     - production
   branch:
     - master
----
-kind: "pipeline"
-name: "rollback"
-steps:
-  - name: "rollback"
-    image: "gcr.io/littleman-co/www-littleman-co--build:d7c8edd"
-    commands:
-      - /usr/local/bin/robo rollback --environment=production
-trigger:
-  event:
-    - rollback
-  target:
-    - production
-  branch:
-    - master
 ----
 
-We achieve a "two step" deployment process:
-
-image:/images/continuous-integration-and-delivery/build-flow-with-promotion.png[A two step build, with promotion]
-
-Where step 1 is executed automatically on anything being added to the master branch, whereas step two requires a human
-to "promote" the build. At the time of writing 
-https://github.com/drone/drone-ui/issues/171[it is only possible to trigger the promotion via the CLI]:
+This trigger requires that the developer execute the following command in order to "promote" the canary build to the
+production system:
 
 [source,yaml]
 ----
@@ -730,6 +752,14 @@ Where:
 - `littlemanco/www.littleman.co` is the repository
 - `100` is the build number
 - `production` is the intended environment
+
+With this we achieve the desired "two step" build process:
+
+image:/images/continuous-integration-and-delivery/build-flow-with-promotion.png[A two step build, with promotion]
+
+Where step 1 is executed automatically on anything being added to the master branch, whereas step two requires a human
+to "promote" the build. At the time of writing 
+https://github.com/drone/drone-ui/issues/171[it is only possible to trigger the promotion via the CLI.]
 
 TIP: Our configuration is getting very long and repetitive at this point. Drone has some support for jsonnet as a
      configuration language to help remedy this, or jsonnet can be expressed to yaml prior to the build execution
