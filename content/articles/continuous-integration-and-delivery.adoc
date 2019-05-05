@@ -16,17 +16,19 @@ contributors:
 
 = Continuous integration & delivery
 
-Recently I have had the opportunity to review and use a number of different approaches to continuous integration
-and delivery, or CI/CD. Most recently I've encountered:
+Recently I have had the opportunity to join teams employing a number of different approaches to _continuous
+Integration and delivery_ (CI/CD).
 
-1. CI/CD implemented in BitBucket Pipelines; version controlled, stable & ignored.
-2. CI/CD implemented in Jenkins scripts in the GUI, consumed by several teams and fairly fragile.
-3. No CI/CD at all -- manual releases. But with the ambition to do CI/CD.
+1. *Version Control*: Scripts embedded in the git repository, executed as a result of git events
+2. *GUI*: Scripts written and uploaded to a server, executed on arbitrary events (time, git hooks)
+3. *None*: Scripts sitting on a bastion server, executed as required
 
-In each case each team had a set of reasons for arriving at their particular CI/CD implementation (or lack thereof).
-I have set up several pipelines in the past, from using Jenkins to Travis, BitBucket and finally settling on my
-preferred solution of DroneCI. Through those years there has been many lessons as to how I try and construct these
-pipelines, as well as what I expect from them once they're built.
+In all cases the team had a set of reasons for employing the solution the did, as well as stories as to why that
+Particular solution works best for them.
+
+Because I have both been able to get a view across these teams and have in the past build several systems that
+reflect each design I felt it reasonable to try and explain how I design them now, given that experience,
+as well as what the characteristics of a "good" pipeline are. 
 
 To ensure that  we're on the same page let's start by defining CI/CD:
 
@@ -35,11 +37,12 @@ CAUTION: This article presumes a git repository layout as defined in
 
 == Definitions
 
-One of the early adopters and more vocal organisational proponents of Continuous Integration defines CI as:
+One of the early adopters and more vocal organisational proponents of Continuous Integration, Thoughtworks, 
+defines CI as:
 
-> Continuous Integration (CI) is a development practice that requires developers to integrate code into a shared 
-> repository several times a day. Each check-in is then verified by an automated build, allowing teams to detect 
-> problems early^cite:[tw.ci]^
+> ...a development practice that requires developers to integrate code into a shared repository several times
+> a day. Each check-in is then verified by an automated build, allowing teams to detect problems 
+> early^cite:[tw.ci]^
 
 They go on to define Continuous Delivery:
 
