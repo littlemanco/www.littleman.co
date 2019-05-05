@@ -47,7 +47,7 @@ defines CI as:
 They go on to define Continuous Delivery:
 
 > …the natural extension of Continuous Integration, an approach in which teams ensure that every  change to the
-> system is releasable, and release any version with the push of a] button^cite:[tw.cd]^.
+> system is releasable, and release any version with the push of a button^cite:[tw.cd]^.
 
 Even given these definitions too understand how to operate CI/CD now it's first worth understanding how CI/CD came to
 be.
