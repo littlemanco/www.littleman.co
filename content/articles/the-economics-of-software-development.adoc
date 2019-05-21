@@ -1,0 +1,278 @@
+---
+categories:
+  - Philosophy
+date: 2019-05-19
+description: "A conjecture applying a limited knowledge of economics to software development"
+tags:
+  - "Economics"
+  - "Management"
+title: "The software development economy"
+github-issue: 11
+images:
+  - "/images/headers/architecting-a-software-system-for-malleability.png"
+contributors:
+  - "Andrew Howden"
+---
+
+There are a series of allegories that encapsulate the murkier, more confusing part about producing software:
+
+> *"Culture eats strategy for breakfast"* - _Peter Drucker_^cite:[forbes.breakfast-culture]^
+
+> *"Organizations which design systems ... are constrained to produce designs which are copies of the communication 
+  structures of these organizations."* - _Melvin Conway_^cite:[wiki.conway]^.
+
+These hint at an aspect of software development thats is generally not covered when considering software architectural
+models -- the human.
+
+Recently a team I have been working with has been evaluating and architecting a shift from a monolith to a microservice
+architecture with the goal of isolating domains of the busines within their own failure boundaries and increasing the
+aggregate availability of all services.
+
+This in an of itself is not a particularly remarkable journey; the number of companies that have made this transition
+is so vast it borders on cliche and there are booked written about the topic^cite:[amazon.microservices]^. However, it
+has raised some significant contentious issues in the company around CI/CD, authentication, logging and monitoring and
+so fourth. I'm confident these problems will get solved; they're not particularly complex, there are well documented
+specifications and an abundance of literature and the company is well motivated to execute it well.
+
+However, what struck me enormously was the disconnect between our intended implementation of microservices and the
+assumptions about our skills, budget and ability to execute versus our historical implementation effort. The
+conversation is healthy, but too often is grounded in our perceptions of ourselves -- not our historical trends.
+The disconnect is normal in any organisation but inspired the writing of this post to highlight some of the traps one
+can fall in to when planning a new system.
+
+== The fallacy that we are rational
+
+When considering ourselves in our assessments of anything we invariably consider ourselves "rational agents". From
+Wikpiedia^cite:[wikipedia.rational-agent]^:
+
+> A rational agent is an agent that has clear preferences, models uncertainty via expected values of variables or 
+> functions of variables, and always chooses to perform the action with the optimal expected outcome for itself from 
+> among all feasible actions.
+
+The problem is humans are decidedly not rational. There are an abundances of biases^cite:[wikipedia.list-bias]^ that
+represent areas in which, given an objective view of our decision our decision is not rational. Some of my favourites
+include:
+
+- *Sunk cost*: Your decisions are tainted by the emotional investments you accumulate, and the more you invest in 
+  something the harder it becomes to abandon it.^cite:[wikipedia.sunk-cost],cite:[yans.sunk-cost]^
+- *Comparitive Bias*: When you think about your future health, career, finances, and even longevity — you imagine a 
+  rosy, hopeful future. For everyone else, though, you tend to be far more realistic.^cite:[]^
+- *Diffusion of Responsibility*: less likely to take responsibility for action or inaction when others are present.
+
+These biases mean the deck is stacked when we design our technical systems; we're both leading ourself to failure and
+blind to see it. Further understanding these human shortcomings is rarely part of the software developers curriculum; 
+many of us are blind to the fact we're blind. 
+
+Given this, what governs the success or failure of our project is rather not our intent but the economic environment
+around us that motivates us to arrive at a given conclusion.
+
+Or, paraphrased, our culture eats ours strategy for breakfast.
+
+== Modelling daily tasks in economic terms
+
+To understand further the impact of economics on software design its worth exploring how different situations play out
+in less than ideal ways simply due to the economic constraints of the problem.
+
+=== The implementation of nonsensical business logic to address an upstream miscommunication
+
+As software developers we are beholden to the business and product development teams who concentrate on delivering value
+to consumers. However, occasionally we can receive some request that violations our conceptual model of what the
+business domain consists of; broadly, it seems nonsensical.
+
+I have seen various of these requests over the years; 
+
+- Sharing passwords between systems
+- Enforcing uniqueness on a comment field -- sometimes
+- Encoding business information such as region, organisation in a users identifier
+- Inserting analytics software into a system that ludicrously degrades the performance of the system being analysed
+
+However, the results of each of these examples have been different. In the case of sharing passwords between systems
+we replied with a flat "No". In the case of uniqueness of comment field we were instructed "please just do it". 
+Business information in IDs was discussed perhaps 20 times in various different ways. Analytics were eventually
+inserted by another team.
+
+In the cases where we "gave in" to business this had demonstrable negative effects on that same business. However, 
+communicating this to stakeholders was so prohibitively expensive we decided that we often elected to "strategically
+lose" this battle -- a euphemism for deciding we couldn't be fucked.
+
+=== Violation of design constraints to adhere to deadlines
+
+Occasionally there are things that will yield a high return on investment if completed immediately. Things like:
+
+- Changes to adhere to new legal requirements
+- Changes to make a new client, very large and expensive happy
+- Changes to introduce a widely demanded market feature or keep with competition
+
+However, these changes come at a cost. This has been discussed under the banner of "technical debt", though that
+metaphor has ben stretched so thin it is all but useless.
+
+On a practical level, violating the design constraints makes software unpredictable. Unpredictable software is
+exponentially more difficult to develop, massively driving up the ongoing maintenance cost of software and making
+future "quick changes" difficult to do.
+
+However, the cost of this is sometimes paid by different teams. Business teams are optimized for seeking as much value
+as possible; development teams should be optimizing to keep development as cheap and as reliable as possible.
+But both explaining the risks associated with violating design constraints and pushing back on business demands is an
+expensive process; the conversations will invariably be difficult and someone will walk away disappointed.
+
+Often this yields a development team that simply implements whatever business says and software that is impossibly
+complex to maintain. 
+
+=== Introduction of new technology for personal benefit at the cost of team benefit
+
+In the ideal world developers would create software that benefits their teams, even should it not benefit themselves.
+However, like all industries developers do not generally get promoted as a team.
+
+In an environment in which "technical excellence" is rewarded and technical excellence is measured by a magpie like
+collection of "technical merits" such that one might be "the most technical" as opposed to solving business problems
+developers will make changes that maximise the appearance of their own "technical merits".
+
+This can include things like:
+
+- Introducing new tools that solve a problem that doesn't affect business
+- Introducing new policies that advantage them over their colleagues
+- Gatekeeping access to systems with concerns their colleagues are "not skilled enough"
+- Increasing the complexity of systems in a way that is "risk tolerable" in the condition they remain employed
+
+These things can be rewarded within a technical scope so long as developers rate their colleagues evaluation  of 
+technical competence as more important than being able to deliver on business goals. In the worst case a developers
+influence and salary is based on these technical markers.
+
+=== Hero engineers
+
+In the world of systems administrations there has traditionally been a culture derived of the communication boundary
+between systems administrators, developers and the business team that imply the systems administrators are heroic in
+their battle to keep systems running despite bizarre implementations from developers and impossible demands from
+business.
+
+Developers in turn were previously encouraged to throw software "across the wall"; to build it and delegate actually
+running it to the systems team.
+
+The notion that systems administrators are somehow heroic for being able to deal with these impossible pressures creates
+a situation in which the administrator can yield a certain amount of prestige and command a given amount of 
+organisational power from being the one who is able to unfuck the system under high pressure.
+
+However, while that prestige exists that engineer may choose to make the tradeoff that, though they have to do things
+other disciplines do not it is somehow worthwhile given the power they command. This means that developers will either
+defer or choose not to address structural issues in such systems, instead enjoying their status as a hero developer.
+
+== Strategies to encourage a "healthy" software architecture
+
+Given our understanding that:
+
+1. Humans are fallible and will deceive themselves into their thinking their correct within the bounds of an economic
+   system, and
+2. These systems can be structured to produced negative company results
+
+It stands to reason that we as software architects must not only factor in the concrete business and technical problems,
+but factor in how humans will behave within that system.
+
+There are a vast number of organisational "dials" that can be addressed but the following are the ones I considered
+while reflecting on this post:
+
+=== Picking (and pruning) communication systems
+
+Melvin Conway made an observation who's implications have yet to be fully understood in his reflection about software
+design and communication boundaries.
+
+Communication boundaries become the borders at which decisions are made; the silos in which decision making power
+is concentrated. These boundaries spring up of their own accord for seemingly legitimate reasons; the most common of
+which is a "special interest group".
+
+Becoming aware of both the number of tools that are used to communicate (Slack, Whatsapp, Facebook, Jira, Confluence)
+as well as who's using these tools and how is an excellent way to understand the dynamics of an organisation. Further,
+its often possible to reduce the number of these tools as well as the different "channels" within the scope of the
+tools by establishing rules as to how the tool should be used.
+
+Reducing the number of tools and increasing the quality of communication in each tool cuts the cost of communication
+significantly and allows raising risk and reconciling ideas much more cheaply.
+
+=== Estabishing a common direction for the company
+
+A company is essentially a social group dedicated to a single person. The ownership and financials of a company aside,
+those within a company should be able to understand the direction of the company and how their work fits into that
+direction. 
+
+If this is unclear team members can invent their own stories as to the direction of a company. These stories will be
+different than the stories of their colleagues and the colleagues will clash and work against each other where those
+stories are in violation with one another.
+
+There are many devices that can be used to express a story, such as:
+
+- Vision & Mission
+- OKRs
+- Purpose
+
+But be clear as to what the companies purpose is, and how colleagues should think about their position within that.
+Without this its impossible to set up the "correct" incentives for moving forward and colleagues will instead prefer
+the stories they write themselves, in which they see themselves as the hero.
+
+=== Celebrate and condemn specific behaviours
+
+In my experience it is far more important to people that they're recognized for the hard work they do and that they feel
+they're contributing in the best way to the shared group vision than any notions of money. Money is only a mechanism
+of evaluating the next job.
+
+However, there are behaviours that may be well intentioned or not considered that are not good for the company. Further,
+there are things that might not be immediately obvious but that will benefit the company.
+
+For example, while the hero systems administrator earlier is well intentioned and works hard to keep the systems up the
+hero behaviour should not be celebrated. Doing so creates the wrong incentives; rather, that administrator should be
+encouraged to push work back to the development team and the development team required to take a pager for their work.
+
+Further, a developer who takes the time to understand a business problem to a greater degree and offers a solution that
+requires no development should be rewarded as opposed to one who takes and implements the work -- no matter the
+technical elegance of that work.
+
+By being deliberate in picking and reinforcing behaviours that encourage the company goal we create a system in which
+all colleagues can work together and trust their colleagues have their best interests at heart; at least in relation
+to the company goal.
+
+=== Psychological safety
+
+Psychological safety is a nebulous topic that has come into public view recently thanks to speakers such as Benè Brown
+Google's excellent ReWork studies. Broadly, it is the capacity to raise a controversial or unpleasant idea, make a
+mistake or otherwise potentially cost the team some utility without personal consequence.
+
+An environment without psychological safety optimizes for safety above all else. This works for a while, but in short
+order ends up with "defensible silos"; sections of the business attempting to shift responsibility to another part
+of the business and vise versa.
+
+This environment is unproductive. There is an inherent risk to all work; psychological safety is the acceptance of that
+risk and the capacity of the team for forgiveness and shared learning from the mistakes that invariably occur. An
+environment that tolerates such mistakes as far more productive than one that does not.
+
+=== Optimizing for "simplicity"
+
+While implementing development work its tempting to try and imagine all use cases of software and create a model that
+will factor in all such uses and have no shortcomings.
+
+However, such models generally only work in concept. While in theory they do indeed have no shortcomings or there are
+things in place to address them the practicality of working with other humans who have different ideas about how
+software and systems should work mean these new abstractions are misunderstood.
+
+This creates systems of stacked complexity as one developer attempts to reconcile their model against an incorrect
+understanding of someone else model.
+
+In order to address this developers need to be attempting to keep systems as simple as possible. This, ironically,
+is not a simple task but doing things such as:
+
+- Following established patterns
+- Sharing literary and other educational material
+- Writing extensive documentation
+- Keeping new abstractions to an absolute minimum
+
+Reduce the risk of misunderstandings and keep our software as cheap to understand and maintain as possible.
+
+== Conclusion
+
+Technical systems are exceedingly complex and with the shift to cloud and cheap compute the systems are distributed,
+and reconciling them has become even more so. However, when considering how a system arrives at its current level of
+complexity and unpredictability it is useful to investigate the economic constraints of the team that implemented the
+software. Further, by being aware of both the inherent fallibility of humans and structuring the software development
+lifecycle to address some of these shortfalls a skilled software architect can address a vast swathe of problems before
+they emerge toward the end of software development.
+
+=== Bibliography
+
+bibliography::[]
