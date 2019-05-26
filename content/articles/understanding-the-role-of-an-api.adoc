@@ -1,0 +1,116 @@
+---
+categories:
+  - Philosophy
+date: 2019-05-19
+description: "A story about what problems an API is designed to solve and how to maximize its efficacy"
+tags:
+  - "API"
+  - "Networks"
+  - "Microservices"
+  - "Abstraction"
+draft: true
+title: "Understanding the role of an API"
+github-issue: 11
+images:
+  # Photo by Pawel Nolbert on Unsplash
+  - "/images/understanding-the-role-of-an-api/city-skyline.png"
+contributors:
+  - "Andrew Howden"
+---
+
+= A story about what problems an API is designed to solve and how to maximize its efficacy
+
+Our world is hopelessly, hilariously complex. Both Thomas Thwaits in his quest to build a toaster^cite:[ted.tw.toaster]^
+and AJ Jacobs in his quest to thank all the people responsible for his morning coffee^cite:[ted.ajj.thank]^ illustrate
+this complexity; it is essentially impossible to reason about how the world works together to produce the various 
+miracles we experience on a day to day basis.
+
+With software eating the world^cite:[a16z.software]^ we in the software engineering community are tasked with a way
+to represent this impossible complexity in our software ecosystem. Just as in meatspace^cite:[mw.meatspace]^ we cope
+with these complexities by creating a set of rules around certain things and treat those things as a kind of 
+"black box".
+
+There are many things in life that we (or at least I) consume that I do not have a good knowledge of; I consume:
+
+- *Cars* through the steering wheel and pedals
+- *Restaurants* through the menu
+- *Toilets* through a handy "push button" interface
+- *Police* through the telephone
+- *Computers* via a keyboard, mouse and the occasional profane word
+
+In all these examples there is a hidden complexity to the objects that we do not see — nor need to to gain utility out
+of that service. So long as the interface is understandable and behaves in a predictable way, we do not worry too much
+about the underlying internals.
+
+However, if you've ever travelled through an airport in a country with a culture significantly different than your own
+and experienced a toilet with different behaviour than you expect you know when these interfaces are unpredictable it 
+is an  unpleasant experience.
+
+Within software it is much the same. We access databases through structured query language (SQL), network services via
+the transmision control protocol (TCP) and underlying operating system resources through the portable operating system
+interface (POSIX). While these interfaces feel to the experienced programmer as natural as breathing they were not
+always present and the lessons that can be drawn from them can be forgotten when designing our own software.
+
+Its thus perhaps reasonable to dive into what an API is designed to accomplished, how to think about APIs when
+designing or own software and what makes a "good" API.
+
+== Understanding the domain
+
+// Well structured software derived from a good understanding of the domain naturally gives out well structured APIs.
+//
+// Invest in learning your domain. At least talk to product, but better go see and discuss with retailers, management,
+// support staff and eveyrone else that touches your problem
+//
+// Find a way to represent their world in software. THen, whatn you've got that, find a way to identify how the units
+// of that osftware work and model that.
+---
+
+We have human problems
+These problems are complex, and we break them down into smaller units to help us understand them.
+Those units are broken down and represented in software
+Those units must talk to each other in defined ways
+Those are APIs
+APIs are hard
+
+The need for predictability to reason about large systems. Predictability allows calculating value, and unpredictable value has an unknown worth and is thus usually skipped from calculation. "Better the devil you know", and the general notion that mismatched expectations are much worse than expectations deliberately not guaranteed. "Loss aversion" et. al
+
+
+ - 
+Identifying fault lines in the application that do not regularly change
+Being deliberate about crafting those lines such that changing there is well structured and cheap
+Common issues within applications:
+- update many things across the app
+- deprecate behaviour
+- change behaviour
+- add new features
+- represent complex business behaviour
+- rethink complex business behaviour; migrating gracefully from one to the other.
+ - need to think about how to express deprecation. E.g. changes happen with software versions; they're "opt in". 
+- alpha , beta, stable
+- 
+Networked systems and new failure modes
+- Network APIs are about connecting heterogeneous languages; means a common language and somewhat non idiomatic things
+- network payload 
+- different languages
+- unreliable systems 
+- slow systems 
+- evebtual consistency and the queue construct
+- acid and API design 
+Examples done well
+- kubernetes 
+- Prometheus
+- Thorough documentation, examples, SDKs written in language idiomatic ways
+Examples done badly
+- Seller center
+
+Interesting new ideas
+- "trial APIs" that require use to keep. Prototype namespace? Pre alpha guarantees
+- GOod error handling and predictability bounds
+Article notes
+- borrow examples from the world
+- implement them in bioprofile
+https://a16z.com/2011/08/20/why-software-is-eating-the-world/
+
+// Todo: Domain driven design?
+
+// Content
