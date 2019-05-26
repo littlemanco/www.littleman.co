@@ -1,0 +1,264 @@
+---
+categories:
+  - "Deep Dive"
+date: "2018-04-14"
+description: "Current thinking about what should be in a commit"
+tags:
+  - "version-control"
+  - "git"
+  - "documentation"
+  - "debugging"
+title: 'Anatomy of a good commit message'
+github-issue: 10
+// Todo: Fix this
+images:
+  - "/images/headers/architecting-a-software-system-for-malleability.png"
+contributors:
+  - "Andrew Howden"
+---
+
+= Anatomy of a “Good” commit message
+
+Git is a tool that’s fundamental to my software development workflow. In the 5 years I have been a developer I have 
+swapped out almost all my tools, but I have found nothing superior to git. It’s adoption, tooling, speed and reliability
+have made it a supremely difficult competitor to beat in terms of version control.
+
+One of the more useful features of git is the “Commit Message”. As each change is applied the software repository, it 
+is annotated with a message. Users can put whatever they like in this message, however there are some practices that 
+make it much easier when reviewing the history of the repository.
+
+Let’s evaluate this by taking a look at a (fake) commit message:
+
+[source,sh]
+----
+Introduce the widget to handle image creation
+
+The project owner has requested the ability to attach images to user
+profiles. Currently in this project, while users can add images to their
+own profiles, administrators cannot add an image on behalf of the user.
+Administrators can create users and full out certain user details, such
+as name and email. However, with the introduction of a policy to ensure
+all users of the system have an up to date photograph attached to the
+profile, the administrator should be able to attach this photograph at
+the time of the users creation.
+
+This commit introduces the widget in the admin section that handles this
+capability. It reuses the existing objects that exist to represent user
+images, only providing a new pathway by which they might be uploaded.
+
+== Stakeholder Impact
+=== Project Owner
+
+This will allow the project owner to add new images to user profiles.
+In this case the primary users of the application are employees, and
+this will allow an easier publication of the welcome packet sent to the
+team about new employees to ensure the employee transition is easier.
+Additionally, the administrator will have a picture associated with all
+users; useful for company directories or the like.
+
+=== Users
+
+By having a picture uploaded on their behalf before they start using the
+system users are not required to immediately learn an unfamiliar system
+to upload their own image prior to the dispatch of the welcome packet.
+This allows the welcome packet to be sent earlier, and a smoother
+transition into employment.
+
+== Design Notes
+=== Sanitisation by image copy
+
+In order to prevent any inadvertent vunlerabilities (such as the
+embedding of PHP code in EXIF metadata) the image is not stored in its
+original form, but rather put through a converter to drop EXIF or other
+steganographically stored data.
+
+BREAKING CHANGE: Modification of the interface for the User object
+                 constructor
+----
+
+
+Whoah. That was large! Let’s break it down piece by piece.
+
+== The subject line
+
+The subject line is the first line in the commit. It’s used to show a small title of the commit in summary views, such as:
+
+[source,bash]
+----
+$ git log --pretty=oneline # amended
+cd6d940 (HEAD -> master) AD-HOC refactor (deployment): Deploy automatically on master
+810f662 AD-HOC fix (Prometheus Configuration): Update port used for Prometheus connections
+6d2c979 AD-HOC feat (Prometheus Config): Add confluence server
+----
+
+You can see there above a coupe of bad commits, and a good one. In the case of our commit:
+
+[source,bash]
+----
+Introduce the widget to handle image creation
+----
+
+The goal for the subject line is to provide a concise summary of what the commit is about when reviewing commits en 
+masse. Given this, some guidelines are:
+
+- *Make it short:* I usually aim for ~72 characters long
+- *Be descriptive:* Be specific about what changed. Fix bug is not super great, but Modify the import category object to 
+  nest subcategory arrays is.
+
+You’ll see the angular commit guidelines in various places I code. I don’t feel strongly about these, they’re just 
+part of the spec at some places I write code..
+
+== The Commit Body
+
+i.e. “the rest of the commit”
+
+The commit body is where we can provide context about the commit itself. I usually break it down into several sections:
+
+=== General Background
+
+The most important aspect of a git commit message is to provide the context around a code change. In our fake commit 
+the example is below:
+
+[source,bash]
+----
+The project owner has requested the ability to attach images to user
+profiles. Currently in this project, while users can add images to their
+own profiles, administrators cannot add an image on behalf of the user.
+Administrators can create users and full out certain user details, such
+as name and email. However, with the introduction of a policy to ensure
+all users of the system have an up to date photograph attached to the
+profile, the administrator should be able to attach this photograph at
+the time of the users creation.
+
+This commit introduces the widget in the admin section that handles this
+capability. It reuses the existing objects that exist to represent user
+images, only providing a new pathway by which they might be uploaded.
+----
+
+As you can see, it’s lengthy. However, it’s our only opportunity to give the people who will be maintaining the code in
+future the necessary context behind the changes that we made.
+
+Some guidelines for this one are:
+
+- *Break at 72 characters:* It is much easier to view in primitive tools such as the CLI, is the format expected on 
+  mailing lists and well supported by tooling. While more modern tooling is less restrictive, it’s a nice nod to our 
+  computing past.
+- *Write in the imperative:* A git commit is a change (or “patch”) to code. A commit message is attached to that 
+  change — not the code itself. Accordingly, when you write a commit message you are writing it as if it’s about to be 
+  applied, rather than about what you just did.
+- *Use consistent terminology:* after many years of working with a project, or even many project, it’s sometimes hard to
+  track what a developer meant with a word in one case compared with another. For example, “administrator” may mean 
+  developer, project manager, project owner, the staff working with the project or special users. Settling on canonical
+  terminology makes it much easier to understand changes over time, as well as search the repository.
+- *Use a standard markup format:* Whether it’s Markdown, Mediawiki, Restructured text etc. It’s useful if a standard 
+  markup format is used in git commits. While it’s unlikely to be rendered, it provides guidelines on how to structure
+  lists, headings etc which make it clear how the content should be written.
+- *Provide as much context as you can:* It’s suuper hard to understand what was going through a colleagues mind (or even
+  your own) 6 months after the code has been committed. Providing the context allows understanding why the code was 
+  changed, not simply how.
+
+Though it’s not usually necessary, we can even go so far as doing ascii diagrams or other lists or other useful 
+structures in a git log. Whatever is required to convey the context behind the commit.
+
+Additionally, the guidelines here apply to subsequent sections.
+
+=== Stakeholder Impact
+
+Another large section:
+
+[source,bash]
+----
+== Stakeholder Impact
+=== Project Owner
+
+This will allow the project owner to add new images to user profiles.
+In this case the primary users of the application are employees, and
+this will allow an easier publication of the welcome packet sent to the
+team about new employees to ensure the employee transition is easier.
+Additionally, the administrator will have a picture associated with all
+users; useful for company directories or the like.
+
+=== Users
+
+By having a picture uploaded on their behalf before they start using the
+system users are not required to immediately learn an unfamiliar system
+to upload their own image prior to the dispatch of the welcome packet.
+This allows the welcome packet to be sent earlier, and a smoother
+transition into employment.
+----
+
+The stakeholder impact allows us to both mentally self-check and restate the intended goals on the work. By writing up
+the impact on the people who are associated with this work, we clearly describe what we intend will be the outcome once
+the changes are merged as well as to whom and why the changes matter.
+
+Some tips for this section are:
+
+- *List all stakeholders prior to writing notes:* By listing all those involved in a project before writing how our 
+  changes will affect them, we ensure that we do not skip those who might not occur to us on first thought, and clearly
+  spell out the implications for those users.
+- *Restate the goals of the work in the context of the stakeholder:* Too often it’s easy to get lost in the 
+  implementation of the work rather than the impetus that started it. I have adjusted more than one commit as I have 
+  realised I forgot or misunderstood something as I was committing it.
+- *Omit stakeholders you deliberately haven’t considered:* Sometimes, changes simply don’t concern a given stakeholder.
+  Project owners often don’t care about server configuration changes or instrumentation improvements — but developers 
+  do. In omitting them it’s clearly communicated they’re not the intended audience for the change.
+
+=== Design Notes
+
+[source,bash]
+----
+== Design Notes
+=== Sanitisation by image copy
+
+In order to prevent any inadvertent vunlerabilities (such as the
+embedding of PHP code in EXIF metadata) the image is not stored in its
+original form, but rather put through a converter to drop EXIF or other
+steganographically stored data.
+----
+
+When doing any sort of development work, we make tradeoffs between various factors that we are implementing. However, 
+these tradeoffs are not visible to users who are reviewing our code either doing code review, or simply when trying to 
+understand the code at a future date.
+
+By explicitly stating these tradeoffs, we add additional information that may help future developers as they revisit 
+this code, or try and write other systems that are dependant on this system.
+
+Some tips for this are:
+
+- *Answer questions in design notes:* Whether in code review, chat or any other tooling try and answer questions by 
+  adding them to the design notes, rather than simply replying inline. In this way, answers are recorded for all future
+   developers rather than simply for that conversation.
+- *Make notes during development:* Sometimes, when development work is particularly in depth, we forget the tradeoffs
+  that we make as we write the code. Make notes during development about decisions you have made so they’re much easier
+  to record in the commit.
+
+=== Breaking Changes
+
+[source,bash]
+----
+BREAKING CHANGE: Modification of the interface for the User object
+                 constructor
+----
+
+This section makes it clear when things have changed that other users may have to be aware of, either when accepting
+the patch or deciding on a version under which to release this software.
+
+== Making that easy
+
+The above is suuper hard to remember. I would find it impossible to reliably implement it all the time. However, git 
+allows contemplating of commit messages! In this, we can add helpful pointers to let us remember this and other 
+guidelines. For more information, see the following article:
+
+- https://medium.com/sitewards/git-tips-template-your-commit-messages-187d8a2051b8
+
+== In Summary
+
+Git histories are an incredibly valuable tool. However, it’s sometimes not clear what delimits a “good” commit message
+from a “bad” one. The above is a rough standard that I try and reach while developing, and one that I have found pays
+off within a few months.
+
+=== Thanks
+
+- Tbaggery, who’s https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html[guidelines] I shamelessly rip off
+here.
+- Matthew Gamble, who originally educated me at great pain about these things.
