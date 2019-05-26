@@ -51,31 +51,344 @@ the transmision control protocol (TCP) and underlying operating system resources
 interface (POSIX). While these interfaces feel to the experienced programmer as natural as breathing they were not
 always present and the lessons that can be drawn from them can be forgotten when designing our own software.
 
-Its thus perhaps reasonable to dive into what an API is designed to accomplished, how to think about APIs when
-designing or own software and what makes a "good" API.
+Its thus perhaps reasonable to dive into what an application programming interface (or API) is designed to 
+accomplish, how to think about APIs when designing or own software and what makes a "good" API.
 
-== Understanding the domain
+== What is an API?
 
-// Well structured software derived from a good understanding of the domain naturally gives out well structured APIs.
-//
-// Invest in learning your domain. At least talk to product, but better go see and discuss with retailers, management,
-// support staff and eveyrone else that touches your problem
-//
-// Find a way to represent their world in software. THen, whatn you've got that, find a way to identify how the units
-// of that osftware work and model that.
+Before carrying on to work out what constitutes a good or bad API and how to design them it's worth establishing a
+common understanding of what an API is in the first place. Naively we might think of an API and consider:
+
+- https://api.twitter.com/1.1/search/tweets.json
+- https://abusiveexperiencereport.googleapis.com/v1/?key={YOUR_API_KEY}
+- https://kubernetes.io/docs/concepts/overview/kubernetes-api/
+
+Wikipedia defines an API as:
+
+> … A set of subroutine definitions, communication protocols, and tools for building software. In general terms, it 
+> is a set of clearly defined methods of communication among various components.
+
+It goes on to say:
+
+> A good API makes it easier to develop  a computer program by providing all the building blocks, which are then put 
+> together by the programmer.
+
+Given this definition the aforementioned resources are indeed APIs. But in addition to those APIs there are vastly
+more:
+
+- The https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol[Hypertext Transfer Protocol] (HTTP)
+- The https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Introduction[Browser APIs] 
+  used in JavaScript
+- The https://en.wikipedia.org/wiki/POSIX[POSIX] APIs
+- The https://redis.io/commands[Redis command list]
+
+Indeed, I would go so far as to consider any structured interface defined to expose some software functionality to the
+consumer is an API -- regardless of whether that was an intended use of that interface or not.
+
+== What makes a "good" API"?  
+
+When considering what makes a "good" API its perhaps reasonable to look at some of the more successful APIs that have
+come before us. For our use case we'll look at perhaps the most successful API in history by consumption -- the
+HTTP API.
+
+=== The HTTP API
+
+The HTTP protocol (0.9) was given live in 1991 by Tim Berners-Lee^cite:[hbpn.httphist]^ and shortly thereafter 
+the Gopher protocol^cite:[wikipedia.gopher]^ as the canonical way to request "hypermedia" data from other computers.
+
+An example of this protocol is:
+
+[source,bash]
+----
+$ telnet google.com 80
+Trying 172.217.168.238...
+Connected to google.com.
+Escape character is '^]'.
+GET /about/
+----
+
+This produces the response:
+
+[source,bash]
+----
+HTTP/1.0 302 Found
+Location: https://about.google/
+Cache-Control: private
+Content-Type: text/html; charset=UTF-8
+
+    ... truncated for brevity ...
+
+Connection closed by foreign host.
+----
+
+This simple protocol would go on to dominate user interactions with computers, helping form the "world wide web" and
+kicking off what has been referred to as the "new industrial revolution"^cite:[wsj.revolution]^.
+
+HTTP displays in my opinion some of the most important properties of APIs. It is:
+
+==== Predictable
+
+When HTTP was built it was initially built on top of other, well defined and commonly understood standards. In 
+particular it was built on top of:
+
+- TCP
+- ASCII
+
+The entire protocol was encapsulated in the `telnet` command above. It consists of the request format:
+
+[source,http]
+----
+${REQUEST_VERB} ${URI} ${HTTP_VERSION}
+${HEADER_KEY}:${HEADER_VALUE}
+
+${BODY}
+----
+
+And response format:
+
+[source,http]
+----
+${STATUS_CODE}
+${HEADER_KEY}:${HEADER_VALUE}
+
+${BODY}
+----
+
+Where 
+
+- `${REQUEST_VERB}` - Something like "GET", "PUT", "POST", "HEAD" etc. Used to indicate whether to send, retrieve or
+  inquire about data
+- `${URI}` - The address of that data. Commonly, but not always modelled after the filesystem
+- `${HTTP_VERSION}` - The HTTP protocol version
+- `${STATUS_CODE}` - A numeric constant and text reference for the status of the request
+- `${HEADER_KEY}:${HEADER_VALUE}` - Key / value pairs that hold request metadata
+- `${BODY}` - The payload of data being sent either way
+
+These primitives can be combined to create the exceedingly complex web that we see today. The particularly exciting
+part of this API is that each specific request is not complex, consisting only of a subset of constants. It is
+easy to understand on the wire both the HTTP request and response.
+
+However, that simple API allows us to generate the extremely complex interactive experiences we see today.
+
+==== Reliable
+
+The #1 and #2 fallacies of distributed computing is^cite:[wayback.fallacies]^ are:
+
+> 1.	The network is reliable
+> 2.	Latency is zero
+
+These illustrate some of the harder problems to reason about with networked computing. Within networked systems one
+cannot guarantee delivery successfully exactly once^cite:[akka.messages]^. And yet, HTTP is used as the underlying
+protocol for browser traffic, REST API, gRPC and a host of other network communication.
+
+While networks are at best flaky annoying messes, HTTP (on top of TCP or with TLS in QUIC) provides some safety by
+providing well defined failure semantics for remote procedure calls (RPCs).
+
+Given the scenarios of:
+
+- *An upstream service being unavailable*: HTTP will return the "503" service unavailable status code
+- *The canonical service being unavailable*: HTTP encourages (but does not require) timeout & retry
+- *The upstream service fails*: HTTP will return a "500" internal error status code
+- *The upstream service is fine, but the request is bad*: HTTP will return a 400 status code
+- *The request is fine*: HTTP will return a 200 status code.
+
+The full list of conditions HTTP is set up to handle is perhaps best expressed via 
+https://httpstatusdogs.com/["HTTP status codes as dogs"] (or more officially 
+https://tools.ietf.org/html/rfc7231#section-6[rfc7231])
+
+==== Consistent
+
+Linus Torvalds is somewhat infamously quoted as saying^cite:[lmkl.lt.userspace]^.
+
+> If a change results in user programs breaking, it's a bug in the kernel. We never EVER blame the user programs.
+
+The rest of that mail serves to emphatically drive home this point in a less than ideal way, but the point still stands.
+APIs should essentially never change.
+
+HTTP maintained wire format backwards compatibility between "0.9" and "1.1" and has remained the same semantic structure
+in HTTP/2 and will continue to do so in the upcoming HTTP/3. For application developers this has meant a largely smooth
+transition between all versions of the HTTP protocol with nearly no changes required to applications that use this
+protocol to continue use.
+
+NOTE: Interestingly HTTP is also a demonstration of how certain practices such as concatenation of assets and
+      spriting images become "semi official APIs", and that when even these longstanding but never documented practices
+      are revised it can cause significant friction.
+
+== Designing our own "good" APIs
+
+While one might consider HTTP an unusual API to use a benchmark of API success I chose it deliberately because it's so
+easy to forget we're dealing with it on daily basis. Languages, frameworks and other tooling hide the HTTP details from
+us such that we do not usually inspect it save in the case of a particularly unusual bug. Indeed, I regularly see
+developers reimplement HTTP semantics _on top of HTTP itself_; recreating error conditions and so fourth.
+
+However, there are steps that we can take to ensure that the APIs we craft make our users happy and live long, healthy
+lives of their own.
+
+To illustrate how to craft an API for long life we can take a look at the fledgling littleman.co project 
+https://www.bioprofile.co/["bioprofile.co"]
+
+=== Use an API specific DSL
+
+As discussed earlier in the HTTP specification our goal with the API design is to be predictable. Perhaps the best
+way to be predictable is to reuse an existing model for API design. There are lots of different ways to model network 
+APIs:
+
+- https://en.wikipedia.org/wiki/Representational_state_transfer[REST], often represented with an
+  https://swagger.io/specification/[OpenAPI specification]
+- https://en.wikipedia.org/wiki/SOAP[SOAP]
+- https://en.wikipedia.org/wiki/XML-RPC[XML-RPC]
+- https://grpc.io/[gRPC]
+
+Using any of the above protocols means that a whole swathe of problems are immediately solved such as:
+
+1. Documentation
+2. Wire format
+3. Error reporting
+4. Interchangability
+5. Language library generation
+
+Most importantly, anyone who consumes your API is likely to have used one or more of the formats described above.
+
+Of the options defined above I prefer gRPC and a slavish adherence to the Google API design 
+guide^cite:[google.apiguide]^. In addition to the properties defined above gRPC uses the wire format 
+"Protobuf"^cite:[google.protobuf]^ which is opinionated, efficient, strongly typed and can be used to generate both
+client and server libraries in a number of different languages.
+
+gRPC itself is implemented on top of HTTP/2.
+
+=== Understanding the domain
+
+In order to derive value from an API it must be possible to map it to some sort of human process. The problem is
+modelling human interactions is hard. Really hard. There have been multitudes of different ways of trying to express
+how humans work in software directly, or in a domain specific language (DSL):
+
+- https://en.wikipedia.org/wiki/Unified_Modeling_Language[Unified Modelling Language]
+- https://en.wikipedia.org/wiki/Business_Process_Model_and_Notation[Business Process Model & Notation]
+- https://en.wikipedia.org/wiki/Domain-driven_design[Domain driven design]
+- https://en.wikipedia.org/wiki/Object-oriented_programming[Object oriented programming]
+
+The designing of APIs is the definition of boundaries between a given process. The better the understanding of both
+a given process and the boundaries between that and other processes the better the API can be designed to reflect those
+relationships. Its worth spending at least much time understanding the domain as it is understanding the nature of
+programming more generally.
+
+Consider the example in bioprofile where a user would like to submit their heart beat frequency to the bioprofile 
+service. It poses some interesting questions, such as:
+
+==== What is a heart rate?
+
+A heart rate could be:
+
+- A metric sampled over a fixed, standardized period
+- A count and average over an arbitrary period
+
+The former gives some insight into the current rate but runs the potential to be an inaccurate representation over time
+if samples are not structured. The latter is always 100% accurate but loses granularity over the arbitrary period.
+
+(Practically the way I'd approach this is to  count & average over standardized periods ala Prometheus `count` metrics)
+
+==== How does the user identify themselves?
+
+The user might not be collecting their heart rate data while connected to the internet. How then do we know whether the
+data actually comes from the user? Further, how does the user even authenticate themselves presuming we can guarantee
+the data? How long do we trust the user is "that user" for?
+
+(Practically the way I'd approach this is with OpenID & token. In future with better identity claims thanks to WebAuthN)
+
+==== Modelling it
+
+The in the example above we have abstract, human problems and need to model them in software — particularly in this
+case over a networked API.
+
+By using an existing authentication specification (OpenID) we can assume that:
+
+1. Our user will attach a json web token (JWT) to the request that identifies who they are, and that can be verified
+   against the authentication servers public key
+2. That JWT will contain a list of scopes that user is allowed to access
+
+Accordingly whenever a user makes that request we can verify that they either own or have access to that data by 
+comparing user IDs and can determine whether they should be able to view or modify that data through the scopes
+attached to the JWT.
+
+We must still model the actual request and response. In this case its likely the user will wish to submit a set of
+"heart rate samples" to the API at any given time. Accordingly, we should have both a "heart rate sample" type and an
+"heart rate sample list" type as well as endpoints that allow submitting both of these types.
+
+In protobuf the type definition might look something like:
+
+[source,protobuf]
+----
+syntax = "proto3";
+
+package v1alpha1.types;
+
+import "google/protobuf/timestamp.proto";
+
+message HeartRateSample {
+
+    // When the sample started
+    google.protobuf.Timestamp start = 1;
+
+    // The length of time of the sample, expressed in seconds
+    float seconds = 2;
+
+    // The total number of heart beats in the sample
+    int32 beats = 3;
+}
+
+message HeartRateSampleList {
+    repeated HeartRateSample samples = 1;
+}
+----
+
+And the service definition look something like:
+
+[source,protobuf]
+----
+syntax = "proto3";
+
+package v1alpha1.services;
+
+import "v1alpha1/types/heartrate.proto";
+import "google/protobuf/empty.proto";
+
+service HeartRateSampleService {
+
+    // Push a single heart rate measurement to your profile
+    //
+    // Will overwrite other measurements started in the same second
+    rpc PutHeartRate(v1alpha1.types.HeartRateSample) returns (google.protobuf.Empty) {
+    }
+
+    // Put a list of heart rate measurements 
+    rpc PutHeartRateList(v1alpha1.types.HeartRateSampleList) returns (google.protobuf.Empty) {
+    }
+}
+----
+
+In this case, understanding that:
+
+1. Time series data is inherently time specific, and the API may as well express that rather than hide it
+2. Users will likely want to submit multiple samples in a single RPC call
+3. Users will likely be submitting their heart rate samples at a different time than they're sampled, and thus need
+   to embed that data in the RPC
+4. The RESTful methods are still a good model for managing this data
+
+Allows us to craft an API that should make sense to implementers. Further, because the API only deals with the specific
+problem of sending and receiving heart rate data and makes no assumptions about how such data will be generated or
+consumed at either end of the RPC it should be flexible for a large range of use cases and require minimal
+maintenance over time.
+
+CAUTION: In the context of bioprofile.co its likely that one user will upload another users data on their behalf. For
+         example, a sports coach may upload profile data on behalf of their athlete. The API is not currently built
+         to handle this, and likely should be adjusted to include a notion of "patient" or "athlete". See the next
+         sections for how to address these "unknown unknowns".
+
 ---
-
-We have human problems
-These problems are complex, and we break them down into smaller units to help us understand them.
-Those units are broken down and represented in software
-Those units must talk to each other in defined ways
-Those are APIs
-APIs are hard
+=== Be slow, offer limited guarantees, prototype.
 
 The need for predictability to reason about large systems. Predictability allows calculating value, and unpredictable value has an unknown worth and is thus usually skipped from calculation. "Better the devil you know", and the general notion that mismatched expectations are much worse than expectations deliberately not guaranteed. "Loss aversion" et. al
 
-
- - 
 Identifying fault lines in the application that do not regularly change
 Being deliberate about crafting those lines such that changing there is well structured and cheap
 Common issues within applications:
