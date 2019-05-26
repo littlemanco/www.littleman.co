@@ -106,7 +106,14 @@ steps:
       - "gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS" 
       - "gcloud config set project $GOOGLE_PROJECT_NAME" 
       - "gcloud container clusters get-credentials --zone $GOOGLE_PROJECT_REGION $GOOGLE_GKE_CLUSTER_NAME" 
-      - "helm upgrade --install --namespace www-littleman-co www-littleman-co deploy/helm" 
+      - |
+          helm upgrade \
+            --install \
+            --namespace www-littleman-co \
+            --wait \
+            --set="pod.web.image=gcr.io/littleman-co/www-littleman-co--web:$(git rev-parse --short HEAD)" \
+            www-littleman-co \
+            deploy/helm
 trigger:
   branch:
     - master
