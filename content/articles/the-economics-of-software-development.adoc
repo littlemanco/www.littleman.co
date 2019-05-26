@@ -14,31 +14,37 @@ contributors:
   - "Andrew Howden"
 ---
 
-There are a series of allegories that encapsulate the murkier, more confusing part about producing software:
+There are a series of allegories that encapsulate the murkier, more confusing part about producing software -- the human
+part:
 
 > *"Culture eats strategy for breakfast"* - _Peter Drucker_^cite:[forbes.breakfast-culture]^
 
 > *"Organizations which design systems ... are constrained to produce designs which are copies of the communication 
   structures of these organizations."* - _Melvin Conway_^cite:[wiki.conway]^.
 
-These hint at an aspect of software development thats is generally not covered when considering software architectural
-models -- the human.
-
 Recently a team I have been working with has been evaluating and architecting a shift from a monolith to a microservice
 architecture with the goal of isolating domains of the busines within their own failure boundaries and increasing the
 aggregate availability of all services.
 
 This in an of itself is not a particularly remarkable journey; the number of companies that have made this transition
-is so vast it borders on cliche and there are booked written about the topic^cite:[amazon.microservices]^. However, it
-has raised some significant contentious issues in the company around CI/CD, authentication, logging and monitoring and
-so fourth. I'm confident these problems will get solved; they're not particularly complex, there are well documented
-specifications and an abundance of literature and the company is well motivated to execute it well.
+is so vast it borders on cliche. There are even books written about the topic^cite:[amazon.microservices]^. However, it
+has raised some significant and contentious issues in the company around:
 
-However, what struck me enormously was the disconnect between our intended implementation of microservices and the
-assumptions about our skills, budget and ability to execute versus our historical implementation effort. The
-conversation is healthy, but too often is grounded in our perceptions of ourselves -- not our historical trends.
-The disconnect is normal in any organisation but inspired the writing of this post to highlight some of the traps one
-can fall in to when planning a new system.
+- CI/CD
+- Authentication
+- Logging 
+- Monitoring
+
+An so on. I'm confident these problems will get solved -- they're not particularly complex, there are well documented
+specifications and an abundance of literature and the company is motivated to execute the transition well.
+
+However, what struck me as the "elephant in the room" was the disconnect between our intended implementation of 
+microservices and subsequent assumptions about our skills, budget and ability to execute versus our historical 
+implementation effort. The conversation about how to implement microservices is interesting but requires us to suspend
+our own assessment of the problems we have, imagining we are instead the sort of high performing engineers I've
+only encountered thusfar in books. 
+
+This juxtaposition highlights some of the issues that we're likely to have when planning any sort of ambitious work.
 
 == The fallacy that we are rational
 
@@ -57,14 +63,14 @@ include:
   something the harder it becomes to abandon it.^cite:[wikipedia.sunk-cost],cite:[yans.sunk-cost]^
 - *Comparitive Bias*: When you think about your future health, career, finances, and even longevity — you imagine a 
   rosy, hopeful future. For everyone else, though, you tend to be far more realistic.^cite:[]^
-- *Diffusion of Responsibility*: less likely to take responsibility for action or inaction when others are present.
+- *Diffusion of Responsibility*: You are less likely to take responsibility for action or inaction when others are 
+  present.
 
-These biases mean the deck is stacked when we design our technical systems; we're both leading ourself to failure and
-blind to see it. Further understanding these human shortcomings is rarely part of the software developers curriculum; 
-many of us are blind to the fact we're blind. 
+These biases stack the proverbial deck when we are designing our technical systems; we are both destined for a much
+harder road than we are planning but are by nature blind to the risk.
 
-Given this, what governs the success or failure of our project is rather not our intent but the economic environment
-around us that motivates us to arrive at a given conclusion.
+Given the trueism that we think in the ways that we are motived to and that we are govern by our economic environment
+the success or failure is much more likely to be determined by those economics. 
 
 Or, paraphrased, our culture eats ours strategy for breakfast.
 
