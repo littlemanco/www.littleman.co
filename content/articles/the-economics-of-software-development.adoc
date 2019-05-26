@@ -9,7 +9,7 @@ tags:
 title: "The software development economy"
 github-issue: 11
 images:
-  - "/images/headers/architecting-a-software-system-for-malleability.png"
+  - "/images/the-economics-of-software-development/a-set-of-coins.png"
 contributors:
   - "Andrew Howden"
 ---
