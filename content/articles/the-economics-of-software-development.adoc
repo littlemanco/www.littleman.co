@@ -23,7 +23,7 @@ part:
   structures of these organizations."* - _Melvin Conway_^cite:[wiki.conway]^.
 
 Recently a team I have been working with has been evaluating and architecting a shift from a monolith to a microservice
-architecture with the goal of isolating domains of the busines within their own failure boundaries and increasing the
+architecture with the goal of isolating domains of the business within their own failure boundaries and increasing the
 aggregate availability of all services.
 
 This in an of itself is not a particularly remarkable journey; the number of companies that have made this transition
@@ -35,21 +35,21 @@ has raised some significant and contentious issues in the company around:
 - Logging 
 - Monitoring
 
-An so on. I'm confident these problems will get solved -- they're not particularly complex, there are well documented
+And so on. I'm confident these problems will get solved -- they're not particularly complex, there are well documented
 specifications and an abundance of literature and the company is motivated to execute the transition well.
 
 However, what struck me as the "elephant in the room" was the disconnect between our intended implementation of 
 microservices and subsequent assumptions about our skills, budget and ability to execute versus our historical 
 implementation effort. The conversation about how to implement microservices is interesting but requires us to suspend
 our own assessment of the problems we have, imagining we are instead the sort of high performing engineers I've
-only encountered thusfar in books. 
+only encountered thus far in books. 
 
 This juxtaposition highlights some of the issues that we're likely to have when planning any sort of ambitious work.
 
 == The fallacy that we are rational
 
 When considering ourselves in our assessments of anything we invariably consider ourselves "rational agents". From
-Wikpiedia^cite:[wikipedia.rational-agent]^:
+Wikipedia^cite:[wikipedia.rational-agent]^:
 
 > A rational agent is an agent that has clear preferences, models uncertainty via expected values of variables or 
 > functions of variables, and always chooses to perform the action with the optimal expected outcome for itself from 
@@ -61,15 +61,15 @@ include:
 
 - *Sunk cost*: Your decisions are tainted by the emotional investments you accumulate, and the more you invest in 
   something the harder it becomes to abandon it.^cite:[wikipedia.sunk-cost],cite:[yans.sunk-cost]^
-- *Comparitive Bias*: When you think about your future health, career, finances, and even longevity — you imagine a 
-  rosy, hopeful future. For everyone else, though, you tend to be far more realistic.^cite:[]^
+- *Comparative Bias*: When you think about your future health, career, finances, and even longevity — you imagine a 
+  rosy, hopeful future. For everyone else, though, you tend to be far more realistic.
 - *Diffusion of Responsibility*: You are less likely to take responsibility for action or inaction when others are 
   present.
 
 These biases stack the proverbial deck when we are designing our technical systems; we are both destined for a much
 harder road than we are planning but are by nature blind to the risk.
 
-Given the trueism that we think in the ways that we are motived to and that we are govern by our economic environment
+Given the truism that we think in the ways that we are motivated to and that we are govern by our economic environment
 the success or failure is much more likely to be determined by those economics. 
 
 Or, paraphrased, our culture eats ours strategy for breakfast.
@@ -110,7 +110,7 @@ Occasionally there are things that will yield a high return on investment if com
 - Changes to introduce a widely demanded market feature or keep with competition
 
 However, these changes come at a cost. This has been discussed under the banner of "technical debt", though that
-metaphor has ben stretched so thin it is all but useless.
+metaphor has been stretched so thin it is all but useless.
 
 On a practical level, violating the design constraints makes software unpredictable. Unpredictable software is
 exponentially more difficult to develop, massively driving up the ongoing maintenance cost of software and making
@@ -193,7 +193,7 @@ tools by establishing rules as to how the tool should be used.
 Reducing the number of tools and increasing the quality of communication in each tool cuts the cost of communication
 significantly and allows raising risk and reconciling ideas much more cheaply.
 
-=== Estabishing a common direction for the company
+=== Establishing a common direction for the company
 
 A company is essentially a social group dedicated to a single person. The ownership and financials of a company aside,
 those within a company should be able to understand the direction of the company and how their work fits into that
@@ -209,8 +209,8 @@ There are many devices that can be used to express a story, such as:
 - OKRs
 - Purpose
 
-But be clear as to what the companies purpose is, and how colleagues should think about their position within that.
-Without this its impossible to set up the "correct" incentives for moving forward and colleagues will instead prefer
+But be clear as to what the company's purpose is, and how colleagues should think about their position within that.
+Without this it's impossible to set up the "correct" incentives for moving forward and colleagues will instead prefer
 the stories they write themselves, in which they see themselves as the hero.
 
 === Celebrate and condemn specific behaviours
