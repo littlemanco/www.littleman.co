@@ -398,7 +398,7 @@ CAUTION: In the context of bioprofile.co its likely that one user will upload an
 
 One of the characteristics of new API systems is that they do not make significant departures from the existing design:
 
-- *TCP* was built after experience developing the PARC universal packet^cite:[wikipedia.parc]^ and experience at
+- *TCP* was built after experience developing the PARC universal packet^cite:[wikipedia.pup]^ and experience at
   ARPANET^cite:[networkhunt.tcposi]^.
 - *gRPC* was developed with experience of developing stubby^cite:[grpc.principles]^
 - *REST* was designed based an examination of the properties of the web^cite:[wikipedia.rest]^
