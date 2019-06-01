@@ -472,6 +472,43 @@ of composing its own primitives into larger primitives or Amazons model of build
 services are both good examples of good primitive APIs that can be aggregated together to create higher order 
 primitives, both internally within those companies and externally by consumers.
 
+=== Be clear about failure
+
+All software will fail eventually. Whether thats as a result of:
+
+- Bad data sent in by the user
+- Temporary conditions such as overload on a server
+- Fatal server conditions rendering a service unavailable
+- Network issues
+
+Our APIs will not always work in the ways we would intend them to. However its possible to considerably reduce the pain
+by being clear as to how and why the service failed, as well as what the user might do to address this.
+
+Within our language specific DSLs that are usually ways to express error:
+
+- HTTP Status codes
+- gRPC error codes
+- User facing errors
+
+At minimum we should correctly set the status codes on our responses, or provide in our client libraries mechanisms to
+handle a lack of responsible from the upstream system.
+
+However, generally speaking when users are debugging our systems they will not have the knowledge that we do to
+translate an error condition into a conjecture as to why an error may be the case. To address this we can send back
+rich error information when users encounter one of these error conditions.
+
+This information should include:
+
+- A code to reference the error. For example, "v1alpha1.foofield.length"
+- A human readable description of the error. For example, "The field FooField is longer than 10 characters"
+- A tip to try to address the issue directly. For example, "Try capping the length of the content in FooField"
+- A URL where the user might understand more about this particular class of errors. For example:
+  "see e.api.bioprofile.co/v1alpha1.foofield.length"
+
+This is a high burden to put on our developers for all types of errors. However, the burden is several orders of
+magnitude higher for those who are attempting to consume the API and supplying good error information can save
+significant hardship and mistrust in implementers.
+
 == In Conclusion
 
 Our world is indeed horribly, hilariously complex. However we as software engineers must find a way to model that
