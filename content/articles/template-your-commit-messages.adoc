@@ -1,0 +1,136 @@
+---
+categories: Technical Analysis
+date: 2018-01-21
+description: "A tip to ensure git commit messages are always written to spec"
+tags:
+  - "git"
+  - "commits"
+  - "documentation"
+  - "templating"
+title: "Template your commit messages"
+github-issue: 10
+contributors:
+  - "Andrew Howden"
+---
+
+= Template your commit messages
+
+I am a reasonably lazy person. My house is a mess, I defer undertaking things unless absolutely necessary and I am 
+generally a flake.
+
+However, at one point and by the “patient” tuition of a colleague, I learned the value of extensively documenting work 
+in commit messages. This has proven it’s value to me over the years I have been a developer so many times I am somewhat
+tyrannical in “encouraging” other colleagues to do the same.
+
+So, here we are — my natural tendency to be as lazy as possible, combined with a wish to write decent commit messages.
+Luckily, this someone smarter than I has solved this problem; enter: Git templates!
+
+== Setting it up
+
+From the man page:
+
+[source,bash]
+----
+commit.template
+   Specify the pathname of a file to use as the template for new commit messages.
+----
+
+Practically, this looks like:
+
+[source,bash]
+----
+$ cat $HOME/.gitconfig
+[commit]
+ template = /opt/git-hooks/GIT_COMMIT
+
+----
+
+Then, you just need to create that file:
+
+[source,bash]
+----
+$ mkdir -p /opt/git-hooks/
+$ cat <<EOF | sudo tee /opt/git-hooks/GIT_COMMIT
+# Format:
+#   TICKET_ID (epic) type (scope): subject
+#
+#   {body} 
+#
+#   BREAKING CHANGE:
+#   BREAKING CHANGE:
+# 
+# "type" can be one of
+#   feat, fix, docs, style, refactor, test, chore
+#
+# Terminology:
+#   Project Owner: Client,
+#   Administrator: Admin,
+#   Customer:      Website customer, users.
+EOF
+----
+
+That’s it!
+
+== Using it
+
+Because it’s included in your git configuration, it’s used every time a commit is generated:
+
+[source,bash]
+----
+$ cd $(mktemp -d)
+$ git init
+# Dump the commit message to STDOUT, rather than attempting to edit it.
+# See https://git-scm.com/book/gr/v2/Git-Internals-Environment-Variables
+# Note: This will create the error:
+# 
+#     Aborting commit; you did not edit the message.
+#
+# This is fine; if you want to edit messgage swap the "cat" part
+# to be "vim" or "nano".
+$ export GIT_EDITOR="cat"
+$ touch foo
+$ git add foo
+$ git commit
+# Format:
+#   TICKET_ID (epic) type (scope): subject
+#
+#   {body} 
+#
+#   BREAKING CHANGE:
+#   BREAKING CHANGE:
+# 
+# "type" can be one of
+#   feat, fix, docs, style, refactor, test, chore
+#
+# Terminology:
+#   Project Owner: Client,
+#   Administrator: Admin,
+#   Customer:      Website customer, users.
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch master
+#
+# Initial commit
+#
+# Changes to be committed:
+# new file:   foo
+#
+Aborting commit due to empty commit message.
+----
+
+See our new shiny commit template! It appears to be prefixed to the default commit template; I’m unsure quite why. 
+I think this is fine.
+
+== In practice
+
+Practically speaking, I find these templates mostly useful for:
+
+- Reminding me to include certain sections.
+- Adopting consistent terminology (see “Project Owner”)
+
+I have also been quick to habituate, and will find that I start to ignore these guidelines unless some feedback loop has
+been implemented to verify that I am actually implementing the proposed standards.
+
+However, they’re useful to ensure that I have consistent git messages, and though it’s now mostly habit, I still find 
+it useful.
