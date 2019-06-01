@@ -20,7 +20,7 @@ contributors:
 
 = A story about what problems an API is designed to solve and how to maximize its efficacy
 
-Our world is hopelessly, hilariously complex. Both Thomas Thwaits in his quest to build a toaster^cite:[ted.tw.toaster]^
+Our world is hopelessly, hilariously complex. Both Thomas Thwaites in his quest to build a toaster^cite:[ted.tw.toaster]^
 and AJ Jacobs in his quest to thank all the people responsible for his morning coffee^cite:[ted.ajj.thank]^ illustrate
 this complexity; it is essentially impossible to reason about how the world works together to produce the various 
 miracles we experience on a day to day basis.
@@ -48,7 +48,7 @@ your own and experienced a toilet with different behaviour than you expect you k
 unpredictable it is an  unpleasant experience.
 
 Within software it is much the same. We access databases through structured query language (SQL), network services via
-the transmision control protocol (TCP) and underlying system resources through the portable operating system
+the transmission control protocol (TCP) and underlying system resources through the portable operating system
 interface (POSIX). While at this point in my career thinking in terms of these interfaces is about as natural as
 breathing these interfaces did not always exist. It is useful for us when we design our own interfaces to understand
 how such systems were designed, packaged and sold into the wider market to become the fundamental building blocks they
@@ -392,7 +392,7 @@ maintenance over time.
 CAUTION: In the context of bioprofile.co its likely that one user will upload another users data on their behalf. For
          example, a sports coach may upload profile data on behalf of their athlete. The API is not currently built
          to handle this, and likely should be adjusted to include a notion of "patient" or "athlete". See the next
-         sections for how to address these "unknown unknowns".
+         sections for how to address these "unknown unknowns". 
 
 === Take it slow
 
@@ -474,7 +474,7 @@ primitives, both internally within those companies and externally by consumers.
 
 === Be clear about failure
 
-All software will fail eventually. Whether thats as a result of:
+All software will fail eventually. Whether that's as a result of:
 
 - Bad data sent in by the user
 - Temporary conditions such as overload on a server
