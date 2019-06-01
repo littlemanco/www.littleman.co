@@ -8,7 +8,7 @@ tags:
   - "Networks"
   - "Microservices"
   - "Abstraction"
-draft: true
+draft: false
 title: "Understanding the role of an API"
 github-issue: 11
 images:
@@ -25,12 +25,13 @@ and AJ Jacobs in his quest to thank all the people responsible for his morning c
 this complexity; it is essentially impossible to reason about how the world works together to produce the various 
 miracles we experience on a day to day basis.
 
-With software eating the world^cite:[a16z.software]^ we in the software engineering community are tasked with a way
-to represent this impossible complexity in our software ecosystem. Just as in meatspace^cite:[mw.meatspace]^ we cope
+With software eating the world^cite:[a16z.software]^ we in the software engineering community are tasked with finding a
+way to represent this impossible complexity in our software ecosystem. Just as in meatspace^cite:[mw.meatspace]^ we cope
 with these complexities by creating a set of rules around certain things and treat those things as a kind of 
 "black box".
 
-There are many things in life that we (or at least I) consume that I do not have a good knowledge of; I consume:
+There are many things in life that we (or at least I) consume that I do not have a good knowledge of. For example, I
+consume:
 
 - *Cars* through the steering wheel and pedals
 - *Restaurants* through the menu
@@ -38,18 +39,20 @@ There are many things in life that we (or at least I) consume that I do not have
 - *Police* through the telephone
 - *Computers* via a keyboard, mouse and the occasional profane word
 
-In all these examples there is a hidden complexity to the objects that we do not see — nor need to to gain utility out
-of that service. So long as the interface is understandable and behaves in a predictable way, we do not worry too much
-about the underlying internals.
+In all these examples there is a hidden complexity to the objects that we do not see. We do not need to see it, nor
+understand it to to gain utility out of that service. So long as the interface is understandable and behaves in a 
+predictable way, we do not worry too much about the underlying internals.
 
-However, if you've ever travelled through an airport in a country with a culture significantly different than your own
-and experienced a toilet with different behaviour than you expect you know when these interfaces are unpredictable it 
-is an  unpleasant experience.
+However, if you've ever travelled through an airport in a country with a bathroom culture significantly different than 
+your own and experienced a toilet with different behaviour than you expect you know when these interfaces are 
+unpredictable it is an  unpleasant experience.
 
 Within software it is much the same. We access databases through structured query language (SQL), network services via
-the transmision control protocol (TCP) and underlying operating system resources through the portable operating system
-interface (POSIX). While these interfaces feel to the experienced programmer as natural as breathing they were not
-always present and the lessons that can be drawn from them can be forgotten when designing our own software.
+the transmision control protocol (TCP) and underlying system resources through the portable operating system
+interface (POSIX). While at this point in my career thinking in terms of these interfaces is about as natural as
+breathing these interfaces did not always exist. It is useful for us when we design our own interfaces to understand
+how such systems were designed, packaged and sold into the wider market to become the fundamental building blocks they
+are today.
 
 Its thus perhaps reasonable to dive into what an application programming interface (or API) is designed to 
 accomplish, how to think about APIs when designing or own software and what makes a "good" API.
@@ -57,20 +60,21 @@ accomplish, how to think about APIs when designing or own software and what make
 == What is an API?
 
 Before carrying on to work out what constitutes a good or bad API and how to design them it's worth establishing a
-common understanding of what an API is in the first place. Naively we might think of an API and consider:
+common understanding of what an API is in the first place. Naively we might think of an API and consider HTTP API
+implementations such as:
 
 - https://api.twitter.com/1.1/search/tweets.json
 - https://abusiveexperiencereport.googleapis.com/v1/?key={YOUR_API_KEY}
 - https://kubernetes.io/docs/concepts/overview/kubernetes-api/
 
-Wikipedia defines an API as:
+However, the definition of an API is somewhat more inclusive. Wikipedia defines it as:
 
 > … A set of subroutine definitions, communication protocols, and tools for building software. In general terms, it 
 > is a set of clearly defined methods of communication among various components.
 
 It goes on to say:
 
-> A good API makes it easier to develop  a computer program by providing all the building blocks, which are then put 
+> A good API makes it easier to develop a computer program by providing all the building blocks, which are then put 
 > together by the programmer.
 
 Given this definition the aforementioned resources are indeed APIs. But in addition to those APIs there are vastly
@@ -93,10 +97,10 @@ HTTP API.
 
 === The HTTP API
 
-The HTTP protocol (0.9) was given live in 1991 by Tim Berners-Lee^cite:[hbpn.httphist]^ and shortly thereafter 
+The HTTP protocol (0.9) was given life in 1991 by Tim Berners-Lee^cite:[hbpn.httphist]^ and shortly thereafter succeeded
 the Gopher protocol^cite:[wikipedia.gopher]^ as the canonical way to request "hypermedia" data from other computers.
 
-An example of this protocol is:
+An simple example of this protocol is:
 
 [source,bash]
 ----
@@ -124,7 +128,7 @@ Connection closed by foreign host.
 This simple protocol would go on to dominate user interactions with computers, helping form the "world wide web" and
 kicking off what has been referred to as the "new industrial revolution"^cite:[wsj.revolution]^.
 
-HTTP displays in my opinion some of the most important properties of APIs. It is:
+In my opinion HTTP displays  some of the most important properties of APIs. It is:
 
 ==== Predictable
 
@@ -172,17 +176,22 @@ However, that simple API allows us to generate the extremely complex interactive
 
 ==== Reliable
 
-The #1 and #2 fallacies of distributed computing is^cite:[wayback.fallacies]^ are:
+The #1 and #2 fallacies of distributed computing^cite:[wayback.fallacies]^ are:
 
 > 1.	The network is reliable
 > 2.	Latency is zero
 
 These illustrate some of the harder problems to reason about with networked computing. Within networked systems one
-cannot guarantee delivery successfully exactly once^cite:[akka.messages]^. And yet, HTTP is used as the underlying
-protocol for browser traffic, REST API, gRPC and a host of other network communication.
+cannot guarantee delivery successfully exactly once^cite:[akka.messages]^; they are either delivered:
 
-While networks are at best flaky annoying messes, HTTP (on top of TCP or with TLS in QUIC) provides some safety by
-providing well defined failure semantics for remote procedure calls (RPCs).
+- Repeatedly, until that delivery is acknowledged or
+- A single time, with no guarantee that the message was delivered at all
+
+And yet, HTTP (on top of TCP) manages to overcome this inherent flakiness and is used as the underlying protocol for 
+browser traffic, REST API, gRPC and a host of other network  communication.
+
+While networks are at best flaky annoying messes, HTTP in conjunction with TCP (or in the case of HTTP/3 TLS) provides 
+some safety by providing well defined failure semantics for remote procedure calls (RPCs).
 
 Given the scenarios of:
 
@@ -202,8 +211,8 @@ Linus Torvalds is somewhat infamously quoted as saying^cite:[lmkl.lt.userspace]^
 
 > If a change results in user programs breaking, it's a bug in the kernel. We never EVER blame the user programs.
 
-The rest of that mail serves to emphatically drive home this point in a less than ideal way, but the point still stands.
-APIs should essentially never change.
+The rest of that mail that quote is taken from serves to emphatically drive home this point in a less than ideal way, 
+but the point still stands. APIs should essentially never change.
 
 HTTP maintained wire format backwards compatibility between "0.9" and "1.1" and has remained the same semantic structure
 in HTTP/2 and will continue to do so in the upcoming HTTP/3. For application developers this has meant a largely smooth
@@ -285,7 +294,7 @@ A heart rate could be:
 The former gives some insight into the current rate but runs the potential to be an inaccurate representation over time
 if samples are not structured. The latter is always 100% accurate but loses granularity over the arbitrary period.
 
-(Practically the way I'd approach this is to  count & average over standardized periods ala Prometheus `count` metrics)
+In this case the way I'd approach this is to count & average over standardized periods ala Prometheus `count` metrics
 
 ==== How does the user identify themselves?
 
@@ -293,7 +302,8 @@ The user might not be collecting their heart rate data while connected to the in
 data actually comes from the user? Further, how does the user even authenticate themselves presuming we can guarantee
 the data? How long do we trust the user is "that user" for?
 
-(Practically the way I'd approach this is with OpenID & token. In future with better identity claims thanks to WebAuthN)
+In this case the the way I'd approach this is with OpenID & token. In future with better identity claims thanks to 
+WebAuthN)
 
 ==== Modelling it
 
@@ -384,46 +394,92 @@ CAUTION: In the context of bioprofile.co its likely that one user will upload an
          to handle this, and likely should be adjusted to include a notion of "patient" or "athlete". See the next
          sections for how to address these "unknown unknowns".
 
----
-=== Be slow, offer limited guarantees, prototype.
+=== Take it slow
 
-The need for predictability to reason about large systems. Predictability allows calculating value, and unpredictable value has an unknown worth and is thus usually skipped from calculation. "Better the devil you know", and the general notion that mismatched expectations are much worse than expectations deliberately not guaranteed. "Loss aversion" et. al
+One of the characteristics of new API systems is that they do not make significant departures from the existing design:
 
-Identifying fault lines in the application that do not regularly change
-Being deliberate about crafting those lines such that changing there is well structured and cheap
-Common issues within applications:
-- update many things across the app
-- deprecate behaviour
-- change behaviour
-- add new features
-- represent complex business behaviour
-- rethink complex business behaviour; migrating gracefully from one to the other.
- - need to think about how to express deprecation. E.g. changes happen with software versions; they're "opt in". 
-- alpha , beta, stable
-- 
-Networked systems and new failure modes
-- Network APIs are about connecting heterogeneous languages; means a common language and somewhat non idiomatic things
-- network payload 
-- different languages
-- unreliable systems 
-- slow systems 
-- evebtual consistency and the queue construct
-- acid and API design 
-Examples done well
-- kubernetes 
-- Prometheus
-- Thorough documentation, examples, SDKs written in language idiomatic ways
-Examples done badly
-- Seller center
+- *TCP* was built after experience developing the PARC universal packet^cite:[wikipedia.parc]^ and experience at
+  ARPANET^cite:[networkhunt.tcposi]^.
+- *gRPC* was developed with experience of developing stubby^cite:[grpc.principles]^
+- *REST* was designed based an examination of the properties of the web^cite:[wikipedia.rest]^
 
-Interesting new ideas
-- "trial APIs" that require use to keep. Prototype namespace? Pre alpha guarantees
-- GOod error handling and predictability bounds
-Article notes
-- borrow examples from the world
-- implement them in bioprofile
-https://a16z.com/2011/08/20/why-software-is-eating-the-world/
+If we accept that API is a representation of the conceptual model of software we should also accept that the clarity of
+that conceptual model is based on others ability to compare that model to what they know and understand.
 
-// Todo: Domain driven design?
+It turns out that making things that others understand is exceedingly difficult; the entire field of UX design has been
+created to attempt to create this understanding for users of commercial products. With APIs our audiences are definitely
+smaller but their understanding is no less critical.
 
-// Content
+One of the best ways to try and create something that is useful for others is to involve them in the process. The
+proverbial "release early and often"^cite:[catb.releaseearly]^. Unfortunately, this is in direct violation with the
+aforementioned "Never change APIs"! To address this, we split our API into two a set of "versions" that provide limited
+guarantees. 
+
+APIs start at:
+
+==== Alpha
+
+An alpha API provides absolutely no guarantees about its stability, usage. It is essentially a design declaration and
+may be useful for those who wish to understand where the software is going or prototype their own solutions based on
+that API.
+
+It should absolutely never be used for customer data.
+
+==== Beta
+
+Beta APIs are a sign that the API from the Alpha period is nearing the end of its design and are a sign that
+implementers may wish to start designing and dogfooding^cite:[wikipedia.dogfooding]^ their implementations.
+
+Beta APIs should come with some guarantees, such as:
+
+- 3 month deprecation and removal period
+- No breaking changes without a version bump
+- A single version of backwards compatibility
+- An availability service level objective
+
+==== Stable
+
+Stable APIs are when the API is 100% complete and no further backwards incompatible changes are ever expected to it.
+Stable APIs should essentially never change.
+
+They should come with guarantees such as:
+
+- A 12 - 24 month deprecation period
+- An availability guarantee
+
+By only guaranteeing an API when the design is already well tested and understood by multiple implementers the API
+stands a far greater chance of lasting a long time and software implementers can construct their own designs on top
+of the existing API.
+
+TIP: In addition to the "alpha", "beta" and "stable" API levels it may be worth floating "trial" APIs published
+     silently and included only to a small number of partners to see whether that API is valuable prior to committing
+     design resources to it -- even for an alpha. 
+
+=== Be Unopinionated
+
+It is hard to draw the line between "too opinionated" and "not opinionated enough" in an API. Too much the former and
+the API will be brittle and cost far too much to maintain; too little and the API provides no market value.
+
+APIs that have just the "right" amount of opinion allow the implementation of constructs on top of their own APIs.
+For example,
+
+- The kubernetes "deployment" object embeds a copy of the "pod" object inside itself
+- Amazon Web Services allows users to build complex, user facing services on top of their APIs
+- Browser APIs allow users to create rich, interactive experiences without needing to understand browser internals
+
+A general rule is to be "just opinionated enough" to provide some value with your API design. The Kubernetes approach
+of composing its own primitives into larger primitives or Amazons model of building services on top of its own
+services are both good examples of good primitive APIs that can be aggregated together to create higher order 
+primitives, both internally within those companies and externally by consumers.
+
+== In Conclusion
+
+Our world is indeed horribly, hilariously complex. However we as software engineers must find a way to model that
+complexity in the far stricter world of computing. By being careful and deliberate with our design of APIs we can 
+considerably increase their longevity and improve the experience of users consuming those APIs. Looking at the
+story beyond and implementation of other successful APIs provides us good guidance as to how to build our own APIs in
+future.
+
+=== Bibliography
+
+bibliography::[]
