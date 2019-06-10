@@ -1,0 +1,164 @@
+---
+categories:
+  - "Philosophy"
+date: "2018-04-12"
+description: ""
+tags:
+  - "version-control"
+  - "git"
+  - "documentation"
+  - "debugging"
+title: "The memoir of commit messages"
+github-issue: 10
+images:
+  - "/images/the-memoir-of-commit-messages/hand-writing-on-paper.png"
+contributors:
+  - "Andrew Howden"
+---
+
+A colleague recently joked to me during review “These are commit messages not your memoir!”
+
+I tend to write long commit messages. In extreme cases, I’ll write ~300 words on a two line change! This exacerbates 
+my colleagues to no end, as during a review they must read all this English before even getting near the code! In my 
+current thinking, I do not think this is so bad; indeed, this is a price that’s worth paying. To explain why, it’s worth
+explaining what I consider gits role, as well as what I hope to accomplish (apart from writing my memoir)
+
+== The magic of git
+
+Let’s first start by considering where git messages are most commonly used. I can only speak for myself on this one:
+
+1. When I am working out where on earth today disappeared to (time tracking)
+2. When I want to know who made a change so I can ask them a question (git blame)
+3. When I am trying to understand a change by someone who no longer works with us (annotate in PHPStorm)
+
+Number #3 is comfortably the most frustrating. It is mildly rage inducing to see “Fixed a bug with the importer” when 
+someone does not work here, complete with a path set that introduces a nasty hack that in turn, added another problem. 
+So, the goal with commit messages is to provide as much information as required to future generations of developers (or
+just future me) to save them as much time and heartache as possible when they’re trying to understand the work that 
+I’ve written; perhaps even years later.
+
+So, to begin, let’s think a little about how git works. Git works by layering changes. There’s the initial change (by
+convention simply titled “Initial Commit”, and consisting of a blank README.md file or something similar), but every 
+change there after is made by “adding changes” to the existing data, rather than “replacing” it with a newer copy of 
+the data.
+
+Let’s take a look at this by adding some content to a blank README.md (after it’s been initialized):
+
+[source,bash]
+----
+$ echo "Hello, World!" > README.md
+
+$ git add README.md
+
+$ git commit -m "Said hello to the world"
+
+# "HEAD" means the currently checked out commit. ~1 means "go back 1 from"
+$ git format-patch HEAD~1
+0001-Said-hello-to-the-world.patch
+
+$ cat 0001-Said-hello-to-the-world.patch
+From 43182381239211b4e425c38878a11a04c46cc617 Mon Sep 17 00:00:00 2001
+From: Andrew Howden <hello@redacted.de>
+Date: Wed, 27 Sep 2017 15:09:35 +0200
+Subject: [PATCH] Said hello to the world
+---
+ README.md | 1 +
+ 1 file changed, 1 insertion(+)
+diff --git a/README.md b/README.md
+index e69de29..8ab686e 100644
+--- a/README.md
++++ b/README.md
+@@ -0,0 +1 @@
++Hello, World!
+--
+2.14.1
+----
+
+We can see who made the change (hello@redacted.de), When, the “Subject” (or commit message) and the changes. Each 
+change is the file (README.md), the position in the file in which the changes were made (0,0 +1), the lines that were 
+deleted (`---`) and the lines that were added (`+++``). In the case above, you can see that “Hello, World!” was added; 
+it’s prefixed with the “+” character.
+
+Every single commit looks like this. When you check out a repo, you are checking out that initial state and rebuilding 
+the files from all the changes that have occurred between then and now. Isn’t this incredible! It gives git tremendous 
+power to go back and fourth between every change, skip certain changes, squash some changes in with other changes or 
+even to undo a specific change made many years ago.
+
+When thinking about how to write commit messages, this means that you are writing a message that explains the specific
+changes that you have made (referred to as a “patch set”). Given this, we can start to think about what information is 
+useful in a commit and what information is not. It’s perhaps easier to start with what’s not useful. Some information 
+you can glean simply from inspecting the git tree, without needing to read the commit message at all. This includes things like:
+
+- What files changed
+- What changes were made to those files
+- When those changes were made
+- Who made those changes
+
+This information is all recorded automatically. Thus: you can skip it in your commit message.
+
+=== Where the git magic can't save you
+
+What a commit message does a terrible job of handling the why questions:
+
+1. Why was this change made? What did it hope to accomplish?
+2. Why was this design chosen over other, alternative designs?
+3. Why was a particularly hacky fix introduced? What were the constraints?
+
+These questions are super, super important when revisiting work later implemented! Coming back to our earlier commit 
+message of “Fixed a bug with the importer” it could be made much nicer as follows:
+
+[source,bash]
+----
+Fixed a bug with the importer
+
+During normal operation of the website, an error condition was found
+that prevented nested categories from being associated with any
+products. Specifically, a limitation in the data change format that
+does not anticipate a nested array was found.
+To resolve this, this commit splits categories into their own
+hierarchy, and later recombines them into the expected tree. This
+means that the current data format works, but is a significantly heaver
+computational burden.
+
+== Design Notes:
+
+=== Rethinking the data format:
+
+Unfortunately this change was detected in the production environment,
+and an emergency fix must be implemented as soon as possible. Future
+work should restructure the expected format such that this condition
+never occurs.
+----
+
+With the above information, I can go back to the product manager and indicate that there have been systemic issues in 
+this area, and that we need more time to reevaluate this system. That’s so much more valuable! It saves the client money
+by not patching over systemic problems, and gives us the necessary context to find the issue much more quickly, and 
+decide in a better course of action.
+
+This also has some nice side effects like:
+
+1. Making all commits teachable moments. If each commit is well documented, reviewers may learn some new approach to 
+  solve a problem
+2. Writing documentation inline.
+3. Making me feel way less guilty for moving between projects or jobs.
+
+== Merge Commits
+
+A merge commit is a request to take a set of patches from one stream of work (one branch) and merge it into another 
+stream of work (another branch). Generally speaking when writing commits I will include summary information about a 
+number of commits on a merge commit, or simply omit any information at all; opting instead to document each commit.
+
+== Code Review
+
+Code review is a fundamental part of our development workflow. Invariably, questions are raised and answered, code 
+changes made. However, it is important to stress code review is not permanent. No one is going to look for the code 
+review when reviewing history. Nor might this even be possible; software around development workflows should not be 
+fixed, and dependencies kept to an absolute minimum.
+
+Accordingly, when questions are asked of the review, answer them in the appropriate commit. When additional work is 
+required, document why in your own words, rather than simply writing “CR Fixes” or something equally as obtuse.
+
+== In Conclusion
+
+Commit messages are a kind of memoir. They’re our memoir to our future selves; the way we can communicate with each 
+other across time and jobs. So, bring on the memoirs!
