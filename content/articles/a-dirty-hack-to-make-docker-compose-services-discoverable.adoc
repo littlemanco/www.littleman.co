@@ -1,0 +1,93 @@
+---
+categories:
+  - "Deep Dive"
+date: 2018-06-22    
+tags:
+  - "docker"
+  - "docker-compose"
+  - "DNS"
+  - "networking"
+title: "A dirty hack to make your docker-compose network services discoverable"
+github-issue: 10
+images:
+  - "/images/a-dirty-hack-to-make-docker-compose-services-discoverable/a-man-cutting-a-saw-with-a-pipe.png"
+contributors:
+  - "Andrew Howden"
+---
+
+== The problem
+
+The problem, broadly, is that I am working on a project with a circular network dependency. That means project A needs
+project B to boot, and project B needs project A to boot (except in the very specific circumstance that project A needs
+B … it’s mess)
+
+This means that I need to connect two docker-compose networks together, and have the services find each other.
+
+Additionally, I want to be able to connect to two applications that are normally exposed on the same port, but I don’t 
+want to forward both ports to the localhost, or create a reverse proxy.
+
+== The background
+
+I am using Linux on the desktop. So, the way docker networks work (approximately) is:
+
+1. A bridge network interface is created per network
+2. Docker distributes IPs to each container within that bridge
+3. Docker makes routes so that your desktop machine can connect to each of these containers. Magic!
+
+This does mean that forwarding ports from localhost to the containers is a bit of a non starter. They’re all on a bridge
+network the host anyway right?
+
+Well, docker doesn’t really provide a sane service discover mechanism. Additionally, docker-compose doesn’t seem to 
+allow affixing an IP to a given container, and it certainly doesn’t allow management of networks.
+
+== The magic bullshit solution
+
+Solution: DNS!
+
+The thing is, docker-compose already runs DNS internally. But it’s not reachable. I didn’t find an easy way to make 
+whatever it is that’s running DNS accessible from the host.
+
+BUT WE CAN RUN OUR OWN DNS SERVER!
+
+Each of the containers is configured with the correct upstream resolver. So, all we have to do is access that resolver
+somehow.
+
+Solution:
+
+[source,bash]
+----
+$ docker run  --publish 127.0.0.1:53:53/udp \
+    --network default \
+    --detach \
+    --cap-add=NET_ADMIN \
+    quay.io/coreos/dnsmasq \
+        -d \
+        -q \
+        --log-queries
+
+----
+
+Additionally, you have to do add the nameserver to your `/etc/resolv.conf`. However, let’s unpack how it works:
+
+- We run a DNS container `dnsmasq`
+- `dnsmasq` checks the existing `/etc/resolv.conf` in the container and adds it as an upstream resolver we add this 
+  `dnsmasq` as the upstream resolver in our `/etc/resolv.conf`
+
+Magic addresses work!
+
+== This is a bad idea
+
+This is a terrible idea. The peculiar set of circumstance that make it a reasonable thing to do with this project is 
+that the project consists of multiple different applications managed differently but that all expect to be on the same 
+network and addressable or they will not boot.
+
+I’m currently fixing that.
+
+Additionally, I’m using Linux on the desktop, which means the bridge networks get created in such a way that everything
+is addressable. It might not be that way on Mac or Windows.
+
+Lastly, it feels awful.
+
+== In Conclusion
+
+This is a bad idea. But it does solve this specific problem I have. Finding the borders of technology is fun.
