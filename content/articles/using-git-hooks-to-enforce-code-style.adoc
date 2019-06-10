@@ -1,0 +1,232 @@
+---
+categories: 
+  - Philosophy
+date: 2018-01-28
+tags:
+  - "version-control"
+  - "git"
+  - "code style"
+  - "lint"
+title: "Using git hooks to enforce code style"
+github-issue: 10
+images:
+  - "/images/using-git-hooks-to-enforce-code-style/man-inspecting-tools.png"
+contributors:
+  - "Andrew Howden"
+---
+
+I started as a professional developer a couple of years after playing with development for a couple of years as a 
+hobbyist, or to solve specific business problems that I was having. Then, through some … ahh, unexpected life events, 
+I found myself working as a developer professionally.
+
+I am forever indebted to my former colleagues at Fontis. From no qualifications and not really knowing what a HTTP 
+status code is, they taught me the craft of software development. However, for a little while there it was rough going.
+Years of working solo or in small, relaxed teams had left my code style looking like the code had gone through a blender
+and been painted on my screen by a toddler on with cocaine.
+
+However, in short order I worked out how to successfully fake being tidy, which I still use to this day.
+
+== Linting
+
+Luckily, it looks like I am not the only one to struggle getting the code-style correct. There is an entire class of 
+tools that help with this problem! These are called “linting” tools:
+
+> A linter or lint refers to tools that analyze source code to flag programming errors, bugs, stylistic errors, and 
+> suspicious constructs. The term is originated from a Unix utility that examined C language source code.
+> — https://en.wikipedia.org/wiki/Lint_(software)
+
+These tools were my savour. Gone was all ambiguity as to which brace should go where, or what style of comments should 
+be used. In particular, I can recommend the following tools:
+
+1. PHP Code Sniffer
+2. ESLint
+3. stylelint
+4. Shellcheck
+5. Yamllint
+6. Xmllint
+
+As well, I am sure there are many more. I recommend as you’re choosing your tools, you pick ones that integrate well 
+with your IDE. However, this is not enough to fake it all the way; I am so lazy I forget to use them!
+
+== Git Hooks
+I use (and highly recommend) using the Git version control tool, and almost entirely from the CLI. It provides a series 
+of hooks, or simple scripts that are executed at certain stages during the version control lifecycle. From the man page:
+
+> Hooks are programs you can place in a hooks directory to trigger actions at certain points in git’s execution. Hooks 
+> that don’t have the executable bit set are ignored. By default the hooks directory is $GIT_DIR/hooks, but that can be
+> changed via the core.hooksPath configuration variable (see git-config(1)).
+> — man “githooks”
+
+They’re pretty cool, and I encourage you to read further into them. However, for the purpose of this blog, the one 
+we’re most interested in is:
+
+> pre-commit
+> This hook is invoked by git commit, and can be bypassed with the — no-verify option. It takes no parameters, and is 
+> invoked before obtaining the proposed commit log message and making a commit. Exiting with a non-zero status from this
+> script causes the git commit command to abort before creating a commit.
+
+Excellent! So, we can use this git hook to run our lints. But, what’s particularly exciting is that git will abort the 
+commit if the lints fail. I can’t commit bad code! This can look practically something like this:
+
+[source,bash]
+----
+#!/bin/bash
+# Written in bash, as it's such a good language for dirty hax like this
+# Some boilerplate
+EXIT_CODE_ABORT=1
+LINT_FAILURE=0
+
+# Get the list of files that this commit touches
+FILES=$(git diff --name-only --staged)
+
+for FILE in ${FILES}; do
+    # It's no good linting files that have been deleted! Check if
+    # the file exists
+    stat "${FILE}" 2>&1 > /dev/null
+    
+    # If the file does not exist, then skip it. It's been deleted
+    if [[ $? != 0 ]]; then
+        echo "Cant' stat file. Skipping!"
+    else
+        # Run the actual linter. In this case it's PHPCS
+        phpcs "${FILE}"
+        # Capture the failure. We don't actually want to exit here,
+        # As that will not run any of the subsequent files. It's
+        # better to run all the lints at once, and notify if any
+        # of them failed.
+        if [[ $? != 0 ]]; then
+           LINT_FAILURE=1
+        fi
+    fi
+done
+# If any of the files failed linting, then terminate. We do not
+# want to commit bad files! 
+if [[ ${LINT_FAILURE} == 1 ]]; then
+  exit ${EXIT_CODE_ABORT}
+fi
+----
+
+Put this content in the `.git/hooks/pre-commit` file and chmod +x it and you’ve got yourself a safety between you and 
+looking stupid. Hooray!
+
+== Theory vs reality
+
+Unfortunately, there are some cases in which it’s not reasonable to fix the code style of another file. Whether it’s 
+terrible, terrible upstream code that you’re patching just to fix or whether you need to get things done in an 
+emergency, there are times when you want to be able to commit terrible code.
+
+However, what can happen when you can commit terrible code is that you often commit terrible code. Enter: the skip 
+penalty!
+
+At the beginning of my pre-commit hooks is the following:
+
+[source,bash]
+----
+if [[ -n ${SKIP_LINTS} ]]; then
+echo -e '\e[0;31m' # Red
+cat <<"EOF"
+                            ,-.
+       ___,---.__          /'|`\          __,---,___
+    ,-'    \`    `-.____,-'  |  `-.____,-'    //    `-.
+  ,'        |           ~'\     /`~           |        `.
+ /      ___//              `. ,'          ,  , \___      \
+|    ,-'   `-.__   _         |        ,    __,-'   `-.    |
+|   /          /\_  `   .    |    ,      _/\          \   |
+\  |           \ \`-.___ \   |   / ___,-'/ /           |  /
+ \  \           | `._   `\\  |  //'   _,' |           /  /
+  `-.\         /'  _ `---'' , . ``---' _  `\         /,-'
+     ``       /     \    ,='/ \`=.    /     \       ''
+             |__   /|\_,--.,-.--,--._/|\   __|
+             /  `./  \\`\ |  |  | /,//' \,'  \
+            /   /     ||--+--|--+-/-|     \   \     YOU SKIPPED LINTS. I SAW THAT.
+           |   |     /'\_\_\ | /_/_/`\     |   |    GONNA GO EAT A PUPPY.
+            \   \__, \_     `~'     _/ .__/   /
+             `-._,-'   `-._______,-'   `-._,-'
+EOF
+echo -e "\e[0m" # Off
+    sleep 20
+    exit 0
+fi
+----
+
+Pretty quickly, you can see the idea ;) This allows me to skip the lints with the following bash invocation:
+
+[source,bash]
+----
+SKIP_LINTS=1 git commit -m "haha this is a bad idea"
+----
+
+but I have to pay a penalty for doing so. I get presented with:
+
+image:/images/using-git-hooks-to-enforce-code-style/scary-face-rendered-in-terminal.png[]
+
+and must wait 20 seconds. This has been about the right balance; less time and I found I was simply skipping the lints
+for … well, not very good reasons. More time and it becomes a pain.
+
+== Lint all the things
+
+Unfortunately not all linters implement the same format, conventions or even exit codes. It can get super messy managing
+the various output formats etc. However, there is a solution here!
+
+In a previous job, we used the project management tool Phabricator. It is a superb tool, and I encourage you to look 
+into it if you are looking for free alternatives to BitBucket or Github.
+
+However, relevant to this blog is it’s CLI tool, arcanist. This tool is used for creating “diffs” (basically pull 
+requests) from the CLI, among other things. One of the cooler things it does is runs lints over the code locally prior 
+to creating the diff. This function can be invoked with arc lint.
+
+It provides a series of primitives for collecting the output of many linters! Additionally, it is extensible, and can be
+integrated with linters that it does not support as first class citizens easily. It uses configuration called .arclint;
+an example is blow:
+
+[source,json]
+----
+{
+  "linters": {
+    "php": {
+      "type": "php",
+      "include": "(\\.(php|phtml)$)"
+    },
+    "phpcs": {
+      "type": "phpcs",
+      "bin": "vendor/bin/phpcs",
+      "include": "(\\.(php|phtml)$)",
+      "phpcs.standard": "PSR2"
+    }
+  }
+}
+----
+
+Given the above configuration, instead of our earlier `phpcs ${FILE}`, we can instead run `arc lint ${FILE}` and it will
+ run all appropriate lints over that file. Cool huh! This solves two problems:
+
+1. We can indicate which files should be run with which lints, and
+2. Arcanist will present the output of many linters in a pretty format which is easy to read
+
+Writing the configuration can be annoying, but it’s worth consulting the docs and futzing around for a few hours to get 
+it working.
+
+== Lint all the repos
+
+I work across maybe 30 different repos at various points in time in my development year. Setting hooks up for all of 
+them is tiresome, so I use a centralised git hooks dir which looks for repository specific configuration (the .arclint 
+file i mentioned earlier).
+
+This looks like this:
+
+[source,bash]
+----
+# ~/.gitconfig
+[core]
+ hooksPath = /opt/git-hooks
+----
+
+This means that, instead of setting up and maintaining many hooks, I can simply create .arclint files in each repo. 
+These then go into version control, and I can point colleagues to this awesome habit.
+
+== Final thoughts
+So, that’s how I fake it. Practically speaking it makes no difference; indeed, I would say that my code is a little more
+consistent than colleagues who do not do this by virtue of simply delegating the analysis to a system that’s way better 
+at it than humans ever could be.
+
+You can see my pre-commit hook on GitHub, if you’re looking for inspiration.
