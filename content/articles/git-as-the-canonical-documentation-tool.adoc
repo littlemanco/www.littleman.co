@@ -1,0 +1,176 @@
+---
+categories:
+  - "Philosophy"
+date: "2018-04-12"
+description: ""
+tags:
+  - "version-control"
+  - "git"
+  - "documentation"
+  - "debugging"
+title: "Git as the canonical version control tool"
+github-issue: 10
+images:
+  - "/images/git-as-the-canonical-documentation-tool/jira-github-git-logos.png"
+contributors:
+  - "Andrew Howden"
+---
+
+The software stack required to build and deploy a web application in the last few years is … complex. It requires an 
+IAAS provider, Linux kernel, operating system, 3–4 applications specialising in data management, template rendering or 
+business logic and caching of various kinds. In addition, the “template and business logic” components have become 
+enormous. My current project has a codebase as follows:
+
+[source,bash]
+----
+$ sloc path/to/codebase
+
+Totals grouped by language (dominant language first):
+php:        3506391 (77.08%)
+xml:         771842 (16.97%)
+javascript:    262736 (5.78%)
+sh:            2903 (0.06%)
+python:        1967 (0.04%)
+yacc:          1791 (0.04%)
+ansic:         1138 (0.03%)
+ruby:           211 (0.00%)
+perl:            64 (0.00%)
+
+Total Physical Source Lines of Code (SLOC)                = 4,549,043
+Development Effort Estimate, Person-Years (Person-Months) = 1,386.26 (16,635.17)
+ (Basic COCOMO model, Person-Months = 2.4 * (KSLOC**1.05))
+Schedule Estimate, Years (Months)                         = 8.37 (100.45)
+ (Basic COCOMO model, Months = 2.5 * (person-months**0.38))
+Estimated Average Number of Developers (Effort/Schedule)  = 165.61
+Total Estimated Cost to Develop                           = $ 187,265,454
+ (average salary = $56,286/year, overhead = 2.40).
+----
+
+That’s 4 million lines of code. All of this complexity needs to be maintained, and much of it for many years at a time 
+by large teams. In addition, new features are consistently developed, tested and released and portions of the codebase 
+deprecated and replaced with newer constructs.
+
+This requires pooling of knowledge and coordination among large numbers of people — documentation. That documentation 
+needs to be maintained and accessible by the team of people working on the software for the entire time of the project.
+
+== Choosing weapons
+
+It is common software projects to have three (or more) different tools for managing projects, each that serve different
+purposes or audiences.
+
+=== Jira
+
+Jira is the canonical project management tool. It is designed to coordinate the creation of user stories, assignment of
+stories (or story components) to a developer, testing and merging of those stories into a release and the release of 
+software to production.
+
+This is an inherently complex task involving the project management team, customers, developers, QA team and perhaps 
+others, and is the central place where decisions are made around a project.
+
+=== GitHub
+
+GitHub is used as the version control management tool, and is the primary way we coordinate the actual code changes made
+to projects. It’s used for creating branches, running pipelines but most importantly (in terms of documentation) 
+submitting pull requests.
+
+There is invariably much discussion on a pull request. Different developers have different thoughts on how each thing
+should be implemented, and what to them is important. Pull requests are usually approved by someone, and merged into the
+mainline.
+
+=== Git
+
+Git stores the history of all changes made to a repository as far as the codebase was maintained by our, or ideally the 
+previous team.
+
+Perhaps most critically in terms of documentation, it requires that each change is documented as it is applied to the 
+code base. Termed a “commit”, the change is record with the date, time, author and some notes about what the changes 
+were.
+
+== Canonical Documentation
+
+Given that we have three different systems (at least) in which we might record project information, it begs the question
+— where do we go to look it up?
+
+In my mind, the answer is and always should be: git
+
+image:/images/git-as-the-canonical-documentation-tool/github-commits-review.png[]
+
+Git has a number of advantages over the other tools which make it superior as a mechanism to track information:
+
+=== It is attached directly to the code
+
+Version control is a fundamental part of our development workflow. Additionally, if GitHub is any proxy it is 
+fundamental to vast chunk of all software development. Indeed, it’s rare that you will find an open source project not
+available by git, or at least some version control.
+
+This means that the documentation of git is additionally attached to the code. Further, it is even attached directly to
+the line of code that changed with that commit. Developers can look up documentation right next to the code that they 
+are attempting to understand.
+
+=== It is distributed with the code
+
+Git commits are, as mentioned, attached to the code. This means that wherever the code is checked out with version 
+control, the documentation is additionally checked out. There are no dependencies on third party tools, nothing locked 
+behind organisational knowledge bases or ticket systems or simply defunct internet servers — at worst, developers can 
+run git log or git blame on systems to read the relevant documentation.
+
+No matter what other changes happen organisationally, or even as a project gets transferred between organisations the 
+documentation attached to git commits will remain.
+
+=== It is extremely well supported
+
+Because git has become the defacto standard version control management tool and writing this documentation is a 
+requirement as part of using the tool, it has become extremely well supported by third party tooling. GitHub specialises
+in the easy management of the sometimes opaque git (pictured above) but it’s also accessible by almost all IDEs, text 
+editors, browsers etc.
+
+Further, some platforms have standardise overloading it’s plaintext format such that, like Markdown, it still is 
+pleasant to read when the overloading is not present however the overloading provides useful context when viewing in 
+certain platforms.
+
+Lastly, there exists a large amount of tooling that provides additional context around git (such as viewing the “subway”
+of the merge history) which are made even more useful by this documentation.
+
+=== It is extremely consistent
+
+Embedding documentation in a git commit is a requirement of git. Git is usually configured to simply reject saving work
+without including some form of message — even if that message is a somewhat unhelpful "fixed bug".
+
+There are few other systems that are as consistent as git. Jira, for example, does not require appending a comment with
+each change of ticket status. GitHub doesn’t enforce replying to comments. But git requires documenting with each 
+addition to the codebase. Developers are required to express something, and wedging additional information there is not
+super difficult.
+
+Accordingly, git will usually be the most up to date documentation.
+
+=== It is (somewhat) well understood
+
+Given that it’s a requirement of the essentially defacto way to manage software, it’s also become reasonably well 
+understood. Developers are commonly used to operations like git log to read a linear history of the project, or git 
+blame to look for context given a particular file change.
+
+Unfortunately the power of commit messages isn’t entirely well understood. It took me quite some years of experience and
+finding unhelpful commit messages while debugging issues to become as evangelistic as I have about providing context in
+git commits. However, hopefully this post helps!
+
+== Addressing things git can’t track
+
+Unfortunately there are some things this form of documentation is not suitable for. General project steps such as how to
+deploy, what the architecture and constraints are, what the intent is over time — this is hard to express in gits linear
+ format.
+
+Luckily, git allows us to save that documentation as files. Simply write it in docs/${FILE}.txt and commit it. This 
+pattern is well established with the README.md or CONTRIBUBTING.mdpattern, as well as in the Linux kernel with 
+documentation the same directory as the code.
+
+== In conclusion
+
+There are many different tools that we must keep up to date as we are coordinating a project with all stakeholders. But 
+in my mind, there is only one place which must reflect an accurate summary of all the tools — the same place that 
+manages the actual things being built.
+
+git.
+
+=== Thanks
+
+- Matthew Gamble, who drove this lesson home for me initially.
