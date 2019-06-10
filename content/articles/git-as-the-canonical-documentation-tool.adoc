@@ -8,10 +8,10 @@ tags:
   - "git"
   - "documentation"
   - "debugging"
-title: "Git as the canonical version control tool"
+title: "Git as the canonical documentation tool"
 github-issue: 10
 images:
-  - "/images/git-as-the-canonical-documentation-tool/jira-github-git-logos.png"
+  - "/images/git-as-the-canonical-documentation-tool/jira-github-git-logos.jpeg"
 contributors:
   - "Andrew Howden"
 ---
