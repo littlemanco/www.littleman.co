@@ -13,7 +13,6 @@ in. Currently there is:
 - https://www.littleman.co/articles/[The Website]
 - https://dev.to/[dev.to]
 - https://hackernoon.com/[Hacker Noon]
-- https://medium.com/littlemanco[Medium]
 - https://twitter.com/littlemanco[Twitter]
 
 Articles are canonically published on the https://www.littleman.co/[littleman.co website], but can be syndicated on any
@@ -100,6 +99,33 @@ contributors:
 
 // Content
 ----
+
+=== Social Media
+
+Messages should be written approximately as so:
+
+[source,markdown]
+----
+${ITERATION} ${TITLE}
+
+${DESCRIPTION}
+
+${URL}
+----
+
+Where 
+
+- *Iteration*: A notation like `[New]`, `[Via Archive]`, `[Repost]`, `[Revised]` denotes why the item is being posted
+- *Title*: The article title
+- *Description*: A description of the articles contents
+- *URL*: The URL to the article.
+
+The terms used in the iteration mean:
+
+- *New*: The article has never been published via social media before
+- *Repost*: The article was recently published via social media, but not in this timezone or day
+- *Via Archive*: The article is an older post
+- *Revised*: The article is an older post that has been rewritten with more up to date content
 
 == Styleguide
 
