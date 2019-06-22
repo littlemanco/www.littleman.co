@@ -1,0 +1,51 @@
+---
+date: "2019-06-22"
+description: "Documentation associated with introspecting websites, services and so fourth"
+title: "Introspection"
+contributors:
+- "Andrew Howden"
+---
+
+== Google Analytics
+
+Google Analytics should be installed on websites to track a swathe of user facing data essentially automatically.
+
+It is possible to add context to Google Analytics by supplying UTM parameters^cite:[google.support.utm]^ in the URL. As
+much as possible it is good to standardize on the UTM parameters; the following being the "known" UTMs:
+
+=== UTM
+
+==== Source
+
+[cols="2,8"]
+|===
+| Term     | Reference
+
+| git      | Stored as part of the `git` artifact. For example, part of the git body
+|===
+
+==== Medium
+
+[cols="2,6,2"]
+|===
+| Term     | Reference                                                                           | Used with
+
+| body     | The body component of a git artifact                                                | git
+|===
+
+=== Campaign
+
+[cols="2,8"]
+|===
+| Term              | Reference
+
+| tf-bioprofile-co  | A GitHub repository
+| tf-littleman-co   | 
+|===
+
+bit.ly is configured to list URLs with the link shortener `l.littleman.co` to omit such back references from the URL
+in the page.
+
+== Additional Reading
+
+- "Practices", Prometheus, https://prometheus.io/docs/practices
