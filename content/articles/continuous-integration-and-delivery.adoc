@@ -780,6 +780,10 @@ https://github.com/littlemanco/www.littleman.co/issues[voice yourself on GitHub]
 
 <3
 
+=== Thanks
+
+- Masrur Mirboboev for an excuse to demonstrate this
+
 == References
 
 bibliography::[]
