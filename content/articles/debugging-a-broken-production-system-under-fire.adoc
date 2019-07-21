@@ -1,0 +1,341 @@
+---
+categories:
+  - "Deep Dive"
+date: 2019-07-21
+description: "How I approach investigating production systems issues, particularly in an incident"
+tags:
+  - "linux"
+  - "incident"
+  - "sysctls"
+  - "tcp"
+title: "Debugging a production system under fire"
+images:
+  - "/images/debugging-a-production-system-under-fire/using-a-magnifying-glass-to-read-chemical-formulae.png"
+contributors:
+  - "Andrew Howden"
+---
+
+Recently I started my first period of "on call" maintaining a large, heavily used PHP application. I approached this on
+call with a certain amount of trepidation as it has a reputation for being ... more exciting than in other teams and the
+application itself is aggregate result of several years worth of work in a hurry -- it is exceedingly complex.
+
+This on call has indeed been more "interesting" than I would consider healthy. That said, most of the issues are either
+false alarms or filling disks -- both simple enough to debug. Most, but not all. One of the disk issues was due to an
+intermittent Redis connection failure which got a lot less intermittent all of a sudden spamming up log files until
+they filled disk. An innocuous little message:
+
+[source]
+----
+connect() failed: Cannot assign requested address in ${APPLICATION_PATH}/${PROMETHEUS_LIB}/Redis.php
+----
+
+== Incident Declaration
+
+The issue was picked up by system monitoring for disk usage. The rule looks something like:
+
+[source,bash]
+----
+# Only similar to the rule used internally. See:
+#   https://github.com/kayrus/prometheus-kubernetes/blob/master/prometheus-rules/low-disk-space.rules
+ALERT NodeLowRootDisk
+  IF ((node_filesystem_size{mountpoint="/root-disk"} - node_filesystem_free{mountpoint="/root-disk"} ) / node_filesystem_size{mountpoint="/root-disk"} * 100) > 75
+  FOR 2m
+  LABELS {
+    severity="page"
+  }
+  ANNOTATIONS {
+    SUMMARY = "{{$labels.instance}}: Low root disk space",
+    DESCRIPTION = "{{$labels.instance}}: Root disk usage is above 75% (current value is: {{ $value }})"
+  }
+----
+
+That triggers an alert raised with Alert Manager which is then routed to OpsGenie and whomever is on call. In this case,
+that was me.
+
+My goals with the incident response process (in order) are:
+
+1. Communicate with stakeholders who use or otherwise modify the system as to the state of the problem and approximate
+   time to resolution
+2. Restore the issue to good working state as quickly as possible
+3. Collect enough data to make investigating the issue in depth later possible
+
+Communication takes highest priority as software is in service to user. Further, and to quote Charity Majors:
+
+[quote]
+____
+Nines don't matter if users aren't happy
+____
+
+Given that, the actions I will generally take are:
+
+- Email key stakeholders (if they're external to the organisation)
+- Open a slack channel. This functions as a "war room", and allows coordinating change across multiple people should
+  it be required. It also function as a form of record keeping for the later investigation.
+- Start debugging the issue, pasting key commands / outputs / graphs into the chat as time goes on.
+
+Production issues generally do not happen the same way 2x. Accordingly, patching the issue in-situ in production is the
+only time it is possible to collect high fidelity data about the problem for later analysis.
+
+== Initial Remediation
+
+It wasn't immediately clear what was spamming the logs. The logs were so large (~50gb) that in-place analysis was
+expensive and yet it appeared disks were filling up so quickly that machines would shortly die a horrible "disk full"
+type death.
+
+So, step 1: Drop logs.
+
+At this point, the alert, but not the problem goes away. Rather, the goal with first response is to "buy as much time
+as possible" to investigate the issue in more depth.
+
+While dropping logs means that any other errors that happened in this period effectively cannot be investigated this
+sort of investigation is usually a "choice between evils". Difficulty in understanding existing problems is less
+critical than dead machinery, and traffic is high enough that issues are likely to repeat over a short span.
+
+== Going Spelunking
+
+With the logs gone it was effectively impossible to start debugging the issue from those logs. However, "luckily" the
+issue quickly reoccurred and even should it had not, the logs increased dramatically even after the last rotation and
+the bug was likely to be the same.
+
+Given a few GB Of logs in a short span of time, the next step was simply to look as to why the logs were filling up.
+At this point, I had two theories:
+
+1. An extremely large log (multiple MB) being written to disk in an unusual error condition
+2. A extremely frequent log
+
+Finding this was a matter of opening up the log file with `less -S` and holding "pgup" or "pgdown" for some period of time
+until I spotted a pattern.
+
+Because the log files were so large, any given pattern of several screens worth of "pgup" and "pgdown" is not really
+enough "proof" that this is causal. However, I new that `grep` would filter out content I did not want efficiency and
+`wc` can count the number of lines in a file.
+
+That would not have helped me understand whether it was a "long" or a "repetitive" one, but I had a suspicion that `wc`
+might allow character counts. A quick of `man` showed that it counts bytes -- even better. So, with that it was a
+process of:
+
+[source,bash]
+----
+cat ${LOGFILE} | wc --bytes
+cat ${LOGFILE} | grep ${QUERY} | wc --bytes
+----
+
+And seeing what the percentage of the log file that matched `${QUERY}` was.
+
+A couple of attempts later, I queried the string `Redis::` and found it -- 90% of the log file.
+
+== Understanding the error
+
+To recap, the error was:
+
+[source]
+----
+connect() failed: Cannot assign requested address in ${APPLICATION_PATH}/${PROMETHEUS_LIB}/Redis.php
+----
+
+By chance, I had spent some considerable time to debug this as it had also presented as a failure to write some cache
+data and the bug had surfaced to my software engineering team.
+
+That investigation found that:
+
+- We use the Redis PHP extension
+- That extension is written in C
+- We're on Linux
+
+Googling that error message a bit found:
+
+- https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno.h#L82
+
+Not an exact match (it doesn't print the string), but pretty close. Googling the constant found the man page for 
+http://man7.org/linux/man-pages/man2/connect.2.html[the `connect()` syscall:]
+
+[source]
+----
+EADDRNOTAVAIL
+  (Internet domain sockets) The socket referred to by sockfd had
+  not previously been bound to an address and, upon attempting
+  to bind it to an ephemeral port, it was determined that all
+  port numbers in the ephemeral port range are currently in use.
+  See the discussion of /proc/sys/net/ipv4/ip_local_port_range
+  in ip(7).
+----
+
+My next goal was to confirm this was happening via `strace`. This appeared to go correctly, and `strace` found:
+
+[source]
+----
+connect(12, {sa_family=AF_INET6}, sin6_port=htons(0), inet_pton(AF_INET6, "::1", &sin6_addr), sin6_flowinfo=htonl(0), sin6_scope_id=0}, 28) = -1 EADDRNOTAVAIL (cannot assign requested address)
+----
+
+Great I thought! Confirmed. I went off shortly to start investigating the connection issues. Checking various system
+settings, such as:
+
+- `sysctl - | grep somax`
+- `cat /proc/sys/net/ipv4/ip_local_port_range`
+
+And comparing them to my local machine, with the suspicion that there was some sort of difference. After a while I gave
+up -- not only was there no differences, but despite running different commands I could not see any sort of exhaustion.
+Further, my knowledge of the TCP stack was limited -- I know some things, but I do not know many.
+
+So, at this point, it was a bunch of Googling. Trying to understand:
+
+- What the error meant
+- What the possible range of ephemeral ports was
+- How to check whether we were reaching that limit
+
+Finally I found the command:
+
+[source,bash]
+----
+$ netstat -nat | awk '${print 6}' | sort | uniq -c | sort -n
+      1 Foreign
+      1 established
+      5 LISTEN
+     13 CLOSE_WAIT
+     99 ESTABLISHED
+  30400 TIME_WAIT
+----
+
+This, coupled with the assumption that the port range:
+
+[source,bash]
+----
+ $ cat /proc/sys/net/ipv4/ip_local_port_range
+32768	60999
+----
+
+Meant that there were around `28231` ephemeral ports available I figured I had my proof.
+
+Unfortunately more Googling here was not particularly helpful. The reading I encountered showed several settings:
+
+[source,bash]
+----
+$ cat /proc/sys/net/ipv4/tcp_fin_timeout
+$ cat /proc/sys/net/ipv4/tcp_tw_recycle
+$ cat /proc/sys/net/ipv4/tcp_tw_reuse
+----
+
+Checking the Linux documentation showed:
+
+[source]
+----
+tcp_tw_recycle - BOOLEAN
+    Enable fast recycling TIME-WAIT sockets. Default value is 0.
+    It should not be changed without advice/request of technical
+    experts.
+
+tcp_tw_reuse - BOOLEAN
+    Allow to reuse TIME-WAIT sockets for new connections when it is
+    safe from protocol viewpoint. Default value is 0.
+    It should not be changed without advice/request of technical
+    experts.
+----
+
+Further, an https://vincent.bernat.ch/en/blog/2014-tcp-time-wait-state-linux#netipv4tcp_tw_reuse[excellent article] by
+Vincent Bernat gave the following note:
+
+[quote]
+____
+When the remote host is in fact a NAT device, the condition on timestamps will forbid all the hosts except one behind 
+the NAT device to connect during one minute because they do not share the same timestamp clock. In doubt, this is far 
+better to disable this option since it leads to difficult to detect and difficult to diagnose problems.
+____
+
+Frankly, that scared the nonsense out of me. I understand TCP well enough to know that it should never be possible to
+"cross streams", but naively I figured that changing this stuff may lead to unpredictable TCP behaviour and that might
+break things much more wildly than dirty disks.
+
+At this point it was 8PM, my colleagues had long since left and my wife was calling me home. I figured I'd get to it
+once I'm there, so I can at least be in the same room as she is while debugging.
+
+Once home, I promptly forgot about this.
+
+== Midnight Courage
+
+As you may have noticed, I hadn't actually fixed the issue. Rather, I'd dropped the logs and decided to think about it.
+
+Accordingly, a few hours later at ~2am, alarms went off again.
+
+The state of mind when an alarm goes off at ~2am is ... more aggressive than it is at a comparatively well thought out
+8pm. At that point I wanted a fix that would work well enough that I could sleep undisturbed for some period of time,
+without fear of being woken up again.
+
+Running the same commands showed the same problems, though the problem had spread to multiple different environments
+at this point. Further, reviewing the dashboards indicated it would pop up in several more in the hours following. It
+appears this weekend is somehow busier than weekends previous or we had deployed a new Redis behaviour that was
+much more demanding.
+
+The period between ~2am and ~3am was mostly just further reading. I spent the required time to more fully read the
+aforementioned article by Vincent and started to understand the two settings I was earlier thinking about. The:
+
+- `tcp_tw_recycle`
+- `tcp_tw_reuse`
+
+They are both optimisations to address what is fundamentally a "good thing" with regards to TCP being in the TIME_WAIT
+state. The optimisation for both "recycle" and "reuse" reads properties of the TCP connection so it can decide to use it
+earlier than "good practice" for TIME_WAIT would otherwise endorse.
+
+The difference between the two settings was that "recycle" is used for both "ingoing" and "outgoing" connections, 
+whereas "reuse" is only ever used for outgoing connections. That shifts the burden of proof -- connections made to
+external systems or to localhost might go wrong, but they're much easier to identify and much less consequential as
+they fail earlier.
+
+Further, while reading up on this particular setting I discovered it was enabled *on the host* but not 
+*in the container*. While the container has a separate network namespace this setting has no reason to be different
+between the guest and the host.
+
+With that, the decision to enable `tcp_tw_reuse` was made. Unfortunately, it is impossible to set sysctls in docker
+as docker drops the privileges required to do so.
+
+Damn.
+
+== Dirty Hacks to work around Docker
+
+Luckily, docker is not a super strict isolation between guest and host. Rather, it's a set of sane Linux primitives
+and a chroot. It is possible to "partially break in" to the container from the host, via `nsenter`.
+
+That made it a fairly straight forward process:
+
+1. Identify the container running out of ports
+2. Find `pid 1` in that container via `docker inspect`
+3. Execute `nsenter --net --target=$PID`
+4. Write the sysctl
+
+`nsenter` allows entering into Linux namespaces and containers are made up of several namespaces; `pid`, `ipc`, `net`
+and so fourth. By entering the `net` namespace we are in the namespace, but not confined by dockers policy dropping. 
+We can do whatever we like in the container!
+
+Upon writing the sysctl the problem went away immediately. Disk increase tailed off and no more logs were written.
+
+It was "rest & repeat" across the cluster.
+
+== Follow up
+
+Those familiar with Kubernetes will note that as soon as a container is rebooted the problem will reoccur. This is
+an acceptable risk for now as alerting will pick up on when the disks continue to be full once again and implementing
+a permanent change is ... expensive.
+
+However, a permanent change must be implemented. Accordingly, the next steps for this are to write a post mortem that
+describe the issue in as much detail as possible, steps taken, issues encountered while fixing and so fourth.
+
+That will get handed back to the teams for implementations in the coming week, and the issue should never pop up again.
+
+== In Conclusion
+
+Production systems are "where the rubber meets the road". They're the only system that really matters, regardless of how
+much time we spent engineering new and exciting ways of trying not to think about it.
+
+To me, it extremely important both for organisational health and for engineers to understand their own code that they
+go on call and are required to support the application in production. While uncomfortable at first it informs future
+design decisions and bugs are cheapest when they're caught in design. Being on call is occasionally unpleasant, but made
+far more so when there is a disconnect between the engineers who implement the code and the ones who support it in a
+production system.
+
+Debugging this problem drew on many different sources of "general knowledge", each of which was discovered from a
+combination of curiosity and dealing with other issues. There is little substitute for the aggregate models that
+experienced engineers develop about system and organisations should incentivize new developers to gain that experience
+as quickly as possible.
+
+All in all, it was a fun bug. One I hadn't hit before and one that tested my knowledge just the "right" amount.
+
+I never want to solve it again.
