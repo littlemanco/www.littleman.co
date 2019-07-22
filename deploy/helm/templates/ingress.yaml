@@ -1,0 +1,32 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  labels:
+    app: {{ template "www-littleman-co.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "www-littleman-co.fullname" . }}
+spec:
+  rules:
+  - host: www.littleman.co
+    http:
+      paths:
+      - backend:
+          serviceName: {{ template "www-littleman-co.fullname" . }}
+          servicePort: 80
+        path: /
+  - host: littleman.co
+    http:
+      paths:
+      - backend:
+          serviceName: {{ template "www-littleman-co.fullname" . }}
+          servicePort: 80
+        path: /
+  tls:
+  - hosts:
+    - www.littleman.co
+    - littleman.co
+    secretName: littleman-co-tls
