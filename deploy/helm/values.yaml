@@ -5,7 +5,7 @@ pod:
     image: gcr.io/littleman-co/www-littleman-co--web
 
 service:
-  type: "ClusterIP"
+  type: "LoadBalancer"
   loadBalancer:
     allowedIps:
       - "0.0.0.0/0"
