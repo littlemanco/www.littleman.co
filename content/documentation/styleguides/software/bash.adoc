@@ -1,0 +1,48 @@
+---
+date: 2019-09-02
+description: "Styleguide for Bash"
+title: "Bash"
+---
+
+= Bash
+
+== Features
+
+=== set
+
+`set` modifies the behavior of bash in specific ways.
+
+See `man bash` for further details.
+
+==== Options
+
+The following set options by default in bash scripts^cite:[vaneyckt.bash]^:
+
+[source,bash]
+----
+#!/bin/bash
+
+set -euo pipefail
+----
+
+They have the following effects^cite:[man.bash]^:
+
+[cols="2,8"]
+|===
+| Symbol         | Effect
+
+| `e`            | Exit immediately if a pipeline (which may consist of a single simple command), a list, or a compound
+                   command (see SHELL GRAMMAR above), exits with a non-zero status.
+| `u`            | Treat  unset variables and parameters other than the special parameters "@" and "*" as an error when
+                   performing parameter expansion.
+| `-o pipefail`  | If  set, the return value of a pipeline is the value of the last (rightmost) command to exit with a
+                   non-zero status, or zero if all commands in the pipeline exit successfully.
+|===
+
+== Linters
+
+- https://www.shellcheck.net/[Shellcheck]
+
+== References
+
+bibliography::[]
