@@ -1,0 +1,33 @@
+---
+date: "2019-09-08"
+description: "Propagating knowledge of who littleman.co is and what they do"
+contributors:
+  - "Andrew Howden"
+---
+
+= Marketing
+
+Generally speaking links that require attribution should be consumed by the bit.ly link shortener custom domain at the
+URL l.littleman.co.
+
+== Google Analytics
+
+=== Campaign Names
+
+The following names are ongoing:
+
+- littleman.co/articles
+- littleman.co/docs
+
+=== Campaign Sources
+
+The following are ongoing "campaigns" with Google Analytics
+
+==== Version Control
+
+|===
+| Parameter        | Examples           | Description
+
+| `utm_source`     | vcs                | Shortened "version control"
+| `utm_medium`     | body, title, patch | The part of the commit containing the link
+|===
