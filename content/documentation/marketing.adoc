@@ -1,5 +1,6 @@
 ---
 date: "2019-09-08"
+title: "Marketing"
 description: "Propagating knowledge of who littleman.co is and what they do"
 contributors:
   - "Andrew Howden"
@@ -30,4 +31,14 @@ The following are ongoing "campaigns" with Google Analytics
 
 | `utm_source`     | vcs                | Shortened "version control"
 | `utm_medium`     | body, title, patch | The part of the commit containing the link
+|===
+
+==== Project Documentation
+
+|===
+| Parameter        | Examples                 | Description
+
+| `utm_source`     | andrewhowdencom/project  | The GitHub URL slugs.
+| `utm_medium`     | docs, README             | The projects documentation
+| `utm_content`    | design                   | The facet of the medium
 |===
