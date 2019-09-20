@@ -6,6 +6,26 @@ title: "Containers"
 
 = Containers
 
+== Supported Builders
+
+The following are the expected build tooling to create images:
+
+- https://github.com/genuinetools/img[img]
+- docker.io
+
+== Lifecycle
+
+Images are expected to be managed by version control and pushed to a registry with CI/CD. Images should not be pushed
+manually under most circumstances as whatever the image needs to be recreated should be queryable from CI/CD.
+
+=== Scheduled Rebuilds
+
+Because containers do not regularly receive security updates containers are expected to be periodically rebuilt on,
+at max, a weekly basis.
+
+Users who expect the most recent updates for a given tag should fetch that image deliberately before compiling their
+own images.
+
 == Labels
 
 === Annotations
