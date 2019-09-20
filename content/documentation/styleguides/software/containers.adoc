@@ -1,0 +1,57 @@
+---
+date: 2019-09-02
+description: "Styleguide for containers"
+title: "Containers"
+---
+
+= Containers
+
+== Labels
+
+=== Annotations
+
+Also known as "Labels".
+
+Images are expected to contain the "standard labels" as defined by the OCI annotations 
+specification^cite:[github.opencontainers.labels]^.
+
+Expressed in the docker build syntax these are:
+
+[source,dockerfile]
+----
+# Where the source for the image comes from
+ENV GIT_ORIGIN="https://github.com/littlemanco/docker--foo"
+
+# The build date in RFC3399 format. For example,
+#
+#   $ date--rfc-3339=seconds
+#   2019-09-20 09:31:02+02:00
+#
+ARG BUILD_DATE
+
+# The git hash in long format. For example, 
+# 
+#   $ git rev-parse HEAD
+ARG GIT_HASH
+
+LABEL org.opencontainers.image.ref.name="foo"
+LABEL org.opencontainers.image.title="Foo"
+LABEL org.opencontainers.image.description="The Foo service"
+LABEL org.opencontainers.image.created="$BUILD_DATE"
+LABEL org.opencontainers.image.authors="littleman.co <support@littleman.co>"
+LABEL org.opencontainers.image.url="$GIT_ORIGIN"
+LABEL org.opencontainers.image.documentation="$GIT_ORIGIN"
+LABEL org.opencontainers.image.licenses="MIT"
+
+# Valid for GitHub URLs only
+LABEL org.opencontainers.image.source="$GIT_ORIGIN/blob/$GIT_HASH/Dockerfile"
+
+# The value of packaged software
+LABEL org.opencontainers.image.version="0.0.0"
+LABEL org.opencontainers.image.revision="$GIT_HASH"
+LABEL org.opencontainers.image.vendor="littleman.co"
+----
+
+== References
+
+bibliography::[]
