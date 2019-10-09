@@ -1,0 +1,30 @@
+---
+date: 2019-09-02
+description: "Styleguide for Go"
+title: "Bash"
+---
+
+= Go
+
+== Libraries
+
+The following libraries provide the canonical implementation of their respective problems.
+
+|===
+| Problem                                                 | Library
+
+| CLI                                                     | github.com/spf13/cobra
+| Configuration                                           | github.com/spf13/viper
+| Exit codes                                              | github.com/dedelala/sysexits
+| Logging                                                 | github.com/sirupsen/logrus
+| Metrics                                                 | go.opencensus.io
+| Tracing                                                 | go.opencensus.io
+|===
+
+== Linters
+
+- https://github.com/golangci/golangci-lint[golangci-lint]
+
+== References
+
+bibliography::[]
