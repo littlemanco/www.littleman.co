@@ -16,7 +16,9 @@ There is an additional shared library called `bar` (`go.pkg.littleman.co/bar`). 
 "internal" and "shared" libraries should not vary, rather only their usage and, where possible, internal libraries
 should be made "sharable".
 
-== Package Name
+== Packages
+
+=== Naming
 
 Go module names should be within the namespace:
 
@@ -25,6 +27,10 @@ Go module names should be within the namespace:
 For example, 
 
 - `go.pkg.littleman.co/widget`
+
+=== Dependency Management
+
+All go programs should use the upstream "go modules" approach to vendor tooling.
 
 == Libraries
 
@@ -45,7 +51,7 @@ The following libraries provide the canonical implementation of their respective
 
 === littleman.co
 
-=== Layout
+==== Layout
 
 A library should consist of at least the following layout:
 
