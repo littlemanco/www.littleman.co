@@ -43,6 +43,45 @@ The following libraries provide the canonical implementation of their respective
 | Tracing                                                 | go.opentelemetry.io
 |===
 
+=== littleman.co
+
+=== Layout
+
+A library should consist of at least the following layout:
+
+|===
+| file          | purpose
+
+| `api.go`      | Define the types that the user is expected to use
+| `${NAME}.go`  | Define the entrypoint of the library (i.e. `func New()`)
+| `meta.go`     | Defines library meta information suitable for introspection by telemetry libraries.
+|===
+
+Where `${NAME}` is the name of the folder containing the package.
+
+The file `meta.go` should contain:
+
+[source,go]
+----
+package bar
+
+// Version is this packages version, expressed as a "semantic version". See:
+//
+// - https://semver.org/
+const Version = "0.0.0+dev"
+
+// Name is the package fully qualified name (i.e. where it can be queried with `go get`).
+const Name = "f/meta"
+----
+
+Where the Version is updated automatically as part of the library release process.
+
+=== Interface over type
+
+Unless that library exists for the sole purpose of establishing an interface (for example, open telemetry) than 
+libraries should not depend on concrete implementations where possible, but rather interfaces that can be fulfilled
+with the above (or similar) libraries.
+
 == Linters
 
 - https://github.com/golangci/golangci-lint[golangci-lint]
