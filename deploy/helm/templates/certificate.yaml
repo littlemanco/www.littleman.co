@@ -1,4 +1,4 @@
-apiVersion: certmanager.k8s.io/v1alpha1
+apiVersion: cert-manager.io/v1alpha2
 kind: Certificate
 metadata:
   labels:
@@ -8,17 +8,11 @@ metadata:
     release: "{{ .Release.Name }}"
   name: {{ template "www-littleman-co.fullname" . }}
 spec:
-  acme:
-    config:
-    - dns01:
-        provider: google-cloud
-      domains:
-      - www.littleman.co
-      - littleman.co
   commonName: littleman.co
   dnsNames:
-      - www.littleman.co
-      - littleman.co
+  - www.littleman.co
+  - littleman.co
+  - api.littleman.co
   issuerRef:
     kind: ClusterIssuer
     name: letsencrypt-prod
