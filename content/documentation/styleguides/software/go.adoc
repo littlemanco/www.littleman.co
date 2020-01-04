@@ -28,6 +28,8 @@ For example,
 
 == Libraries
 
+=== Third Party
+
 The following libraries provide the canonical implementation of their respective problems.
 
 |===
@@ -36,9 +38,9 @@ The following libraries provide the canonical implementation of their respective
 | CLI                                                     | github.com/spf13/cobra
 | Configuration                                           | github.com/spf13/viper
 | Exit codes                                              | github.com/dedelala/sysexits
-| Logging                                                 | github.com/sirupsen/logrus
-| Metrics                                                 | go.opencensus.io
-| Tracing                                                 | go.opencensus.io
+| Logging                                                 | golang.org/pkg/log
+| Metrics                                                 | go.opentelemetry.io
+| Tracing                                                 | go.opentelemetry.io
 |===
 
 == Linters
