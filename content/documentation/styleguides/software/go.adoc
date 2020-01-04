@@ -6,6 +6,26 @@ title: "Bash"
 
 = Go
 
+== Errata
+
+For the purpose of this document, we will be considering an application called the "widget" application
+(`go.pkg.littleman.co/widget`). That application will contain an 'internal only' library called "foo"
+(`go.pkg.littleman.co/widget/internal/foo`).
+
+There is an additional shared library called `bar` (`go.pkg.littleman.co/bar`). The design of libraries between
+"internal" and "shared" libraries should not vary, rather only their usage and, where possible, internal libraries
+should be made "sharable".
+
+== Package Name
+
+Go module names should be within the namespace:
+
+- `go.pkg.littleman.co`
+
+For example, 
+
+- `go.pkg.littleman.co/widget`
+
 == Libraries
 
 The following libraries provide the canonical implementation of their respective problems.
